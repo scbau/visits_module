@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 
 const CONFIG = {
   apiTestUrl: 'http://localhost:8080/',
-  apiHerokuUrl: 'https://scb-trainingmodule.herokuapp.com/',
+  apiHerokuUrl: 'https://visits-backend.herokuapp.com/',
   // apiEC2Url: 'http://ec2-34-239-179-123.compute-1.amazonaws.com:8080/'
 };
 

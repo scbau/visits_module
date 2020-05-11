@@ -1,6 +1,6 @@
 /*
-ng build --prod --base-href https://scbau.github.io/training_module/
-ngh --dir=dist/offline-app
+ng build --prod --base-href https://scbau.github.io/dashboard/
+ngh --dir=dist/visits-app --repo=https://github.com/scbau/dashboard.git
 */
 
 
@@ -16,24 +16,25 @@ import { SidebarComponent } from './modules/sidebar/sidebar.component';
 import { MainviewComponent } from './modules/mainview/mainview.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+
 import { MaterialModule } from './shared/material.module';
+import { FlexLayoutModule } from '@angular/flex-layout';
 
 import { HttpClientModule } from '@angular/common/http';
 import { HttpModule } from '@angular/http';
 
-
-import { MatCarouselModule } from '@ngmodule/material-carousel';
+import { ChartsModule } from 'ng2-charts';
 
 // for local data
-import { HttpClientInMemoryWebApiModule } from 'angular-in-memory-web-api';
 import { InMemoryDataService } from './services/in-memory/in-memory-data.service';
 import { InMemoryDataListService } from './services/in-memory/in-memory-datalist.service';
 
 import { PersistenceService } from './services/persistence/persistence.service';
 
-import { PdfViewerModule } from 'ng2-pdf-viewer';
 import { DownloadComponent } from './modules/download/download.component';
 import { LandingComponent } from './modules/landing/landing.component';
+import { DashboardComponent } from './modules/dashboard/dashboard.component';
 
 
 @NgModule({
@@ -42,12 +43,14 @@ import { LandingComponent } from './modules/landing/landing.component';
     SidebarComponent,
     MainviewComponent,
     DownloadComponent,
-    LandingComponent
+    LandingComponent,
+    DashboardComponent
   ],
   imports: [
     BrowserModule,
     HttpClientModule,
     HttpModule,
+    ChartsModule,
     /*HttpClientInMemoryWebApiModule.forRoot(
       InMemoryDataService, { dataEncapsulation: false }
     ),
@@ -55,11 +58,12 @@ import { LandingComponent } from './modules/landing/landing.component';
       InMemoryDataListService, { dataEncapsulation: false }
     ),*/
     AppRoutingModule,
+    FormsModule, 
+    ReactiveFormsModule,
     MaterialModule,
-    MatCarouselModule.forRoot(),
+    FlexLayoutModule,
     ServiceWorkerModule.register('ngsw-worker.js', { enabled: environment.production }),
-    BrowserAnimationsModule,
-    PdfViewerModule
+    BrowserAnimationsModule
   ],
   providers: [{
     provide: APP_INITIALIZER,

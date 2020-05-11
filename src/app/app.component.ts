@@ -24,7 +24,8 @@ export class AppComponent {
     this.persistenceService.getAllData('videos').then((items: any) => {
       onlineDataLength = items.length;
       if (this.networkMode === 'online' && onlineDataLength === 0) {
-        this.items = this.db.collection
+        // this.items = this.db.collection
+        console.log('a');
       }
     })
   }

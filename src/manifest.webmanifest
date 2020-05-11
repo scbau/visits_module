@@ -1,6 +1,6 @@
 {
-  "name": "Training Module",
-  "short_name": "training-module",
+  "name": "Visits Module",
+  "short_name": "visits-module",
   "theme_color": "#1976d2",
   "background_color": "#fafafa",
   "display": "standalone",

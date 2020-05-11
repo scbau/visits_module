@@ -64,7 +64,7 @@ export class PersistenceService {
     return this._dataChange;
   }
 
-	/*private vidDB;
+	private vidDB;
 
 	async connect(): Promise<void> {
 		this.vidDB = await openDB(VID_DB_NAME, 2, {
@@ -83,7 +83,7 @@ export class PersistenceService {
 
 	save(storeName: string, item: any): Observable<any> {
 		return from(this.vidDB.put(storeName, item));
-	}*/
+	}
 
   // constructor() { }
 }

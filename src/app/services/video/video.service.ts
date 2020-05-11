@@ -16,7 +16,8 @@ export class VideoService {
   public videos: Video[] = [
     {
       path: '',
-      downloaded: false
+      downloaded: false,
+      data: ''
     }
   ];
 

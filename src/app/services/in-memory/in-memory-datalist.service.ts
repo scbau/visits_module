@@ -1,4 +1,4 @@
-import { InMemoryDbService } from 'angular-in-memory-web-api';
+// import { InMemoryDbService } from 'angular-in-memory-web-api';
 import { Hero } from '../../models/data';
 import { List } from '../../models/list';
 import { Injectable } from '@angular/core';
@@ -6,7 +6,7 @@ import { Injectable } from '@angular/core';
 @Injectable({
     providedIn: 'root',
 })
-export class InMemoryDataListService implements InMemoryDbService {
+export class InMemoryDataListService /*implements InMemoryDbService*/ {
     createDb() {
         const list = [
             {
