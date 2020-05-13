@@ -6,6 +6,16 @@ import { FormControl } from '@angular/forms';
 
 import * as moment from 'moment';
 
+import { VisitService } from '../../services/visit/visit.service'
+
+
+/*interface TestData {
+  visitCount?: number,
+  total?: number,
+  accountCode?: string,
+  accountName?: string
+}*/
+
 @Component({
   selector: 'app-dashboard',
   templateUrl: './dashboard.component.html',
@@ -13,12 +23,27 @@ import * as moment from 'moment';
 })
 export class DashboardComponent implements OnInit {
 
+  data;
+  visits$;
+
+  totalAchievement = 0;
+
   public weeks = [];
   selectedRange;
 
   public barChartOptions: ChartOptions = {
-    responsive: true,
-    scales: { xAxes: [{}], yAxes: [{}] },
+    maintainAspectRatio: false,
+    scales: {
+      xAxes: [{
+        ticks: {
+          max: 100,
+          min: 0,
+          // steps: 10,
+          // stepValue: 10,
+          callback: label => `${label}%`
+        }
+      }], yAxes: [{}]
+    },
     plugins: {
       datalabels: {
         anchor: 'end',
@@ -26,17 +51,122 @@ export class DashboardComponent implements OnInit {
       }
     }
   };
-  public barChartLabels: Label[] = ['2006', '2007', '2008', '2009', '2010', '2011', '2012'];
-  public barChartType: ChartType = 'bar';
+
+  public barChartOptions2: ChartOptions = {
+    maintainAspectRatio: false,
+    scales: {
+      xAxes: [{
+        ticks: {
+          max: 100,
+          min: 0,
+          // steps: 10,
+          // stepValue: 10,
+          callback: label => `${label}%`
+        }
+      }], yAxes: [{}]
+    },
+    plugins: {
+      datalabels: {
+        anchor: 'end',
+        align: 'end',
+      }
+    }
+  };
+
+  public barChartLabels: Label[] = ['NSW'];
+  public barChartLabels2: Label[] = [];
+  public barChartType: ChartType = 'horizontalBar';
+  public barChartType2: ChartType = 'horizontalBar';
   public barChartLegend = true;
+  public barChartLegend2 = false;
   public barChartPlugins = [pluginDataLabels];
+  public barChartPlugins2 = [pluginDataLabels];
+
+  public barChartColors2 = ['#8ec441', '#8ec441'];
 
   public barChartData: ChartDataSets[] = [
-    { data: [65, 59, 80, 81, 56, 55, 40], label: 'Series A' },
-    { data: [28, 48, 40, 19, 86, 27, 90], label: 'Series B' }
+    { data: [], label: 'Achievement' }
   ];
 
-  constructor() { }
+  public barChartData2: ChartDataSets[] = [];
+
+  constructor(private visitService: VisitService) { }
+
+  fetchVisit() {
+    this.barChartLabels2 = [];
+    this.barChartData2 = [];
+    this.barChartData = [
+      { data: [], label: 'Achievement' }
+    ];
+
+    console.log(this.selectedRange.value);
+
+    if (this.selectedRange.value.length > 0) {
+      var dateString = this.selectedRange.value[0].split('-');
+
+      var fromDate = moment(new Date(dateString[2], dateString[1]-1, dateString[0]));
+      var toDate = moment(fromDate).add(13, 'days');
+
+      console.log(fromDate.format('DD-MM-YYYY'));
+      console.log(toDate.format('DD-MM-YYYY'));
+
+      this.visitService.fetchAchievement(fromDate.toISOString(), toDate.toISOString())
+        .subscribe(data => {
+          console.log(data);
+
+          var arrayData = data;
+          var totalAchievement = arrayData.reduce(function(total, current) {
+            total.visit += current.visitCount;
+            total.plan += current.total;
+            return total;
+          }, { visit: 0, plan: 0 });
+
+          console.log(totalAchievement);
+
+          this.totalAchievement = totalAchievement.visit / totalAchievement.plan;
+          this.barChartData[0].data.push(((totalAchievement.visit / totalAchievement.plan) * 100).toFixed(0));
+
+
+          var perSloc = data.reduce(function(total, current) {
+            if (!total[current["sloc"]]) {
+              total[current["sloc"]] = { visit: 0, plan: 0 };
+            }
+            total[current["sloc"]].visit += current.visitCount;
+            total[current["sloc"]].plan += current.total;
+            return total;
+          }, {})
+
+          console.log(perSloc);
+
+          var data = [];
+
+          for (var item in perSloc) {
+            /*this.barChartData2.push({
+              data: [(perSloc[item].visit / perSloc[item].plan) * 100],
+              label: item
+            })*/
+            data.push(((perSloc[item].visit / perSloc[item].plan) * 100).toFixed(0));
+
+            /*data.push({
+              x: ((perSloc[item].visit / perSloc[item].plan) * 100).toFixed(0),
+              y: item
+            });*/
+
+            this.barChartLabels2.push(item);
+          }
+
+          this.barChartData2.push({
+            data: data,
+            label: "Achievement",
+            backgroundColor: "rgba(142,196,65,1)"
+          });
+        });
+    }/*
+    else {
+      this.visitService.fetchVisit()
+        .subscribe(data => { this.visits$ = data.data; console.log(this.visits$); });
+    }*/
+  }
 
   ngOnInit(): void {
     this.selectedRange = new FormControl();

@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
 import { DashboardComponent } from './modules/dashboard/dashboard.component';
+import { NotVisitedComponent } from './modules/notvisited/not.visited.component';
 
 
 const routes: Routes = [
@@ -12,6 +13,10 @@ const routes: Routes = [
         path: '',
         redirectTo: 'dashboard',
         pathMatch: 'full'
+    },
+    {
+        path: 'dashboard/not-visited',
+        component: NotVisitedComponent
     }
 ];
 

@@ -37,7 +37,7 @@
     "moment": "^2.25.3",
     "moment-range": "^4.0.2",
     "ng2-charts": "^2.3.0",
-    "rxjs": "~6.5.4",
+    "rxjs": "^6.5.5",
     "tslib": "^1.10.0",
     "typescript": "~3.7.5",
     "zone.js": "~0.10.2"

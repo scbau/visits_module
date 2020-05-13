@@ -1,17 +1,6 @@
 <div style="padding: 10px; height: 100%;" fxLayout="row" fxFlexLayout="space-around center">
-  <div fxFlex="20" fxLayout="column" fxFlexLayout="center space-around">
-    <mat-form-field>
-      <mat-label>Date Range</mat-label>
-      <mat-select [formControl]="selectedRange" (selectionChange)="filter($event)" multiple>
-        <mat-option *ngFor="let week of weeks" [value]="week">
-          {{week[0]}} to {{week[1]}}
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
-    <p *ngFor="let data of selectedRange.value">{{data[0]}} to {{data[1]}}</p>
-  </div>
-  <div fxFlex="80" fxLayout="column" fxFlexLayout="center stretch"> 
-    <div style="display: block">
+  <div fxFlex="80">
+    <div style="display: block; position: relative; height: 20vh;">
       <canvas baseChart
         [datasets]="barChartData"
         [labels]="barChartLabels"
@@ -20,6 +9,32 @@
         [legend]="barChartLegend"
         [chartType]="barChartType">
       </canvas>
+    </div> 
+    <div style="display: block; position: relative; height: 60vh;">
+      <canvas baseChart *ngIf="barChartData2.length"
+        [datasets]="barChartData2"
+        [labels]="barChartLabels2"
+        [options]="barChartOptions2"
+        [plugins]="barChartPlugins2"
+        [legend]="barChartLegend2"
+        [colors]="barChartColors2"
+        [chartType]="barChartType2">
+      </canvas>
     </div>
+  </div>
+  <div fxFlex="20" fxLayout="column" fxFlexLayout="space-evenly center">
+    <mat-form-field>
+      <mat-label>Date Range</mat-label>
+      <mat-select [formControl]="selectedRange" (selectionChange)="filter($event)" multiple>
+        <mat-option *ngFor="let week of weeks" [value]="week[0]">
+          {{week[0]}} to {{week[1]}}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+    <p *ngFor="let data of selectedRange.value"> {{data}} </p>
+    <button style="margin-top: 200px;" mat-raised-button color="primary" (click)="fetchVisit()">Update</button>
+    <!-- <ul>
+      <li *ngFor="let visit of visits$">{{ visit }}</li>
+    </ul> -->
   </div>
 </div>

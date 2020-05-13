@@ -32,9 +32,12 @@ import { InMemoryDataListService } from './services/in-memory/in-memory-datalist
 
 import { PersistenceService } from './services/persistence/persistence.service';
 
+import { VisitService } from './services/visit/visit.service';
+
 import { DownloadComponent } from './modules/download/download.component';
 import { LandingComponent } from './modules/landing/landing.component';
 import { DashboardComponent } from './modules/dashboard/dashboard.component';
+import { NotVisitedComponent } from './modules/notvisited/not.visited.component';
 
 
 @NgModule({
@@ -44,7 +47,8 @@ import { DashboardComponent } from './modules/dashboard/dashboard.component';
     MainviewComponent,
     DownloadComponent,
     LandingComponent,
-    DashboardComponent
+    DashboardComponent,
+    NotVisitedComponent
   ],
   imports: [
     BrowserModule,
@@ -57,15 +61,16 @@ import { DashboardComponent } from './modules/dashboard/dashboard.component';
     HttpClientInMemoryWebApiModule.forRoot(
       InMemoryDataListService, { dataEncapsulation: false }
     ),*/
+    MaterialModule,
     AppRoutingModule,
     FormsModule, 
     ReactiveFormsModule,
-    MaterialModule,
     FlexLayoutModule,
     ServiceWorkerModule.register('ngsw-worker.js', { enabled: environment.production }),
     BrowserAnimationsModule
   ],
-  providers: [{
+  providers: [ 
+    VisitService, {
     provide: APP_INITIALIZER,
     useFactory: (persistenceService: PersistenceService) => () => persistenceService.connect(),
     deps: [PersistenceService],
