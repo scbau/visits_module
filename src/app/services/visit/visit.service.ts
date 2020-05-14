@@ -25,4 +25,8 @@ export class VisitService {
       .set("to", toDate);
     return this.http.get('http://localhost:8080/api/visits/compute', { params: params })
   }
+
+  fetchLastVisited(): Observable<Object> {
+    return this.http.get('http://localhost:8080/api/accounts/lastVisited');
+  }
 }

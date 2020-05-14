@@ -111,7 +111,7 @@ export class DashboardComponent implements OnInit {
       console.log(toDate.format('DD-MM-YYYY'));
 
       this.visitService.fetchAchievement(fromDate.toISOString(), toDate.toISOString())
-        .subscribe(data => {
+        .subscribe((data: any) => {
           console.log(data);
 
           var arrayData = data;
@@ -124,7 +124,8 @@ export class DashboardComponent implements OnInit {
           console.log(totalAchievement);
 
           this.totalAchievement = totalAchievement.visit / totalAchievement.plan;
-          this.barChartData[0].data.push(((totalAchievement.visit / totalAchievement.plan) * 100).toFixed(0));
+          var convert = ((totalAchievement.visit / totalAchievement.plan) * 100).toFixed(0);
+          this.barChartData[0].data.push(parseInt(convert));
 
 
           var perSloc = data.reduce(function(total, current) {
@@ -138,14 +139,14 @@ export class DashboardComponent implements OnInit {
 
           console.log(perSloc);
 
-          var data = [];
+          var dataHolder = [];
 
           for (var item in perSloc) {
             /*this.barChartData2.push({
               data: [(perSloc[item].visit / perSloc[item].plan) * 100],
               label: item
             })*/
-            data.push(((perSloc[item].visit / perSloc[item].plan) * 100).toFixed(0));
+            dataHolder.push(((perSloc[item].visit / perSloc[item].plan) * 100).toFixed(0));
 
             /*data.push({
               x: ((perSloc[item].visit / perSloc[item].plan) * 100).toFixed(0),
@@ -156,7 +157,7 @@ export class DashboardComponent implements OnInit {
           }
 
           this.barChartData2.push({
-            data: data,
+            data: dataHolder,
             label: "Achievement",
             backgroundColor: "rgba(142,196,65,1)"
           });

@@ -8,6 +8,8 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { MatTreeModule } from '@angular/material/tree';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
+// import { MatTableDataSource } from '@angular/material/table';
+import { MatPaginatorModule } from '@angular/material/paginator';
 
 @NgModule({
   exports: [
@@ -19,7 +21,9 @@ import { MatTableModule } from '@angular/material/table';
     MatExpansionModule,
     MatTreeModule,
     MatSelectModule,
-    MatTableModule
+    MatTableModule,
+    // MatTableDataSource,
+    MatPaginatorModule
   ]
 })
 export class MaterialModule {}

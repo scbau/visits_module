@@ -1,29 +1,16 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import * as moment from 'moment';
+
+import { MatPaginator } from '@angular/material/paginator';
+import { MatTableDataSource } from '@angular/material/table';
 import { VisitService } from '../../services/visit/visit.service'
 
-export interface TableDataSample {
+export interface LastVisitData {
   account: string;
   lastVisitInDays: number;
+  lastVisit: string;
   position: number;
 }
-
-const ELEMENT_DATA: TableDataSample[] = [
-  { position: 1, account: 'EPB1273 Big Rig 4x4', lastVisitInDays: 7 },
-  { position: 2, account: 'A1588 CARMECH', lastVisitInDays: 13 }
-];
-
-const ELEMENT_DATA2: TableDataSample[] = [
-  { position: 1, account: 'S1821 BATTERIES U NEED', lastVisitInDays: 27 }
-];
-
-const ELEMENT_DATA3: TableDataSample[] = [
-  {
-    position: 1, account: 'M4140 ULTRA TUNE KANGAROO FLAT', lastVisitInDays: 34 },
-  {
-    position: 2, account: 'N1201 BATTERY BROKERS', lastVisitInDays: 35 }
-];
-
 
 @Component({
   selector: 'app-dashboard',
@@ -32,14 +19,81 @@ const ELEMENT_DATA3: TableDataSample[] = [
 })
 export class NotVisitedComponent implements OnInit {
 
-  displayedColumns: string[] = ['position', 'account', 'lastVisitInDays'];
-  dataSource = ELEMENT_DATA;
-  dataSource2 = ELEMENT_DATA2;
-  dataSource3 = ELEMENT_DATA3;
+  displayedColumns: string[] = ['position', 'account', 'lastVisit', 'lastVisitInDays'];
+  dataSource = new MatTableDataSource<LastVisitData>();
+  dataSource3 = new MatTableDataSource<LastVisitData>(); 
+  dataSource2 = new MatTableDataSource<LastVisitData>();
+
+  @ViewChild('paginator1') paginator1: MatPaginator;
+  @ViewChild('paginator2') paginator2: MatPaginator;
+  @ViewChild('paginator3') paginator3: MatPaginator;
 
   constructor(private visitService: VisitService) { }
 
+  updateData(data1, data2, data3) {
+    this.dataSource = new MatTableDataSource<LastVisitData>(data1);
+    this.dataSource2 = new MatTableDataSource<LastVisitData>(data2);
+    this.dataSource3 = new MatTableDataSource<LastVisitData>(data3); 
+
+    this.dataSource.paginator = this.paginator1;
+    this.dataSource2.paginator = this.paginator2;
+    this.dataSource3.paginator = this.paginator3;
+  }
+
   ngOnInit(): void {
-    
+    // this.dataSource.paginator = this.paginator;
+    this.dataSource.paginator = this.paginator1;
+    this.dataSource2.paginator = this.paginator2;
+    this.dataSource3.paginator = this.paginator3;
+
+    this.visitService.fetchLastVisited()
+        .subscribe((data: any) => {
+          console.log(data);
+          var accounts = data.data;
+
+          var today = moment().toDate();
+          var weekOld = moment().subtract(7, 'days').toDate();
+          var fortnightOld = moment().subtract(14, 'days').toDate();
+          var monthOld = moment().subtract(30, 'days').toDate();
+
+          var data1 = [], data2 = [], data3 = [];
+
+          accounts.forEach(item => {
+            var date = new Date(item.lastVisited);
+            if (date <= monthOld) {
+              var diffInDays = moment().diff(moment(date), 'days');
+              data3.push({
+                position: data3.length + 1,
+                account: item.accountCode + ' ' + item.accountName,
+                lastVisit: moment(date).format('DD-MM-YYYY'),
+                lastVisitInDays: diffInDays
+              });
+            }
+            else if (date <= fortnightOld && date > monthOld) {
+              var diffInDays = moment().diff(moment(date), 'days');
+              data2.push({
+                position: data2.length + 1,
+                account: item.accountCode + ' ' + item.accountName,
+                lastVisit: moment(date).format('DD-MM-YYYY'),
+                lastVisitInDays: diffInDays
+              });
+            }
+            else if (date <= weekOld && date > fortnightOld) {
+              var diffInDays = moment().diff(moment(date), 'days');
+              data1.push({
+                position: data1.length + 1,
+                account: item.accountCode + ' ' + item.accountName,
+                lastVisit: moment(date).format('DD-MM-YYYY'),
+                lastVisitInDays: diffInDays
+              });
+            }
+          });
+
+          this.updateData(data1, data2, data3);
+          /*this.dataSource = new MatTableDataSource<PeriodicElement>(data1);
+          this.dataSource.paginator = this.paginator;*/
+          /*this.dataSource2 = data2;
+          this.dataSource3 = data3;*/
+        });
   }
 }
