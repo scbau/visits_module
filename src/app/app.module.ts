@@ -39,6 +39,7 @@ import { DownloadComponent } from './modules/download/download.component';
 import { LandingComponent } from './modules/landing/landing.component';
 import { DashboardComponent } from './modules/dashboard/dashboard.component';
 import { NotVisitedComponent } from './modules/notvisited/not.visited.component';
+import { ChecklistComponent } from './modules/checklist/checklist.component';
 
 
 @NgModule({
@@ -49,7 +50,8 @@ import { NotVisitedComponent } from './modules/notvisited/not.visited.component'
     DownloadComponent,
     LandingComponent,
     DashboardComponent,
-    NotVisitedComponent
+    NotVisitedComponent,
+    ChecklistComponent
   ],
   imports: [
     BrowserModule,

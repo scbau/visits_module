@@ -25,7 +25,8 @@
   <div fxFlex="20" fxLayout="column" fxFlexLayout="space-evenly center">
     <mat-form-field>
       <mat-label>Date Range</mat-label>
-      <mat-select [formControl]="selectedRange" (selectionChange)="filter($event)" multiple>
+      <mat-select [formControl]="selectedRange" (selectionChange)="filter($event)" [(ngModel)]="selectedOption" multiple>
+      <!-- <mat-select [formControl]="selectedRange" (selectionChange)="filter($event)" [(ngModel)]="selectedOption"> -->
         <mat-option *ngFor="let week of weeks" [value]="week[0]">
           {{week[0]}} to {{week[1]}}
         </mat-option>

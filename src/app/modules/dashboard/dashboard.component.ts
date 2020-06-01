@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit } from '@angular/core';
 import { ChartOptions, ChartType, ChartDataSets } from 'chart.js';
 import * as pluginDataLabels from 'chartjs-plugin-datalabels';
 import { Label } from 'ng2-charts';
@@ -21,7 +21,7 @@ import { VisitService } from '../../services/visit/visit.service'
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css']
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, AfterViewInit {
 
   data;
   visits$;
@@ -72,6 +72,8 @@ export class DashboardComponent implements OnInit {
       }
     }
   };
+
+  public selectedOption = ["20-04-2020"];
 
   public barChartLabels: Label[] = ['NSW'];
   public barChartLabels2: Label[] = [];
@@ -187,6 +189,10 @@ export class DashboardComponent implements OnInit {
     }
 
     console.log(this.weeks);
+  }
+
+  ngAfterViewInit(): void {
+    this.fetchVisit();
   }
 
   public chartClicked({ event, active }: { event: MouseEvent, active: {}[] }): void {

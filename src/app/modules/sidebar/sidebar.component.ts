@@ -32,6 +32,11 @@ var TREE_DATA: FoodNode[] = [
     "id": 2,
     "name": "Not Visited",
     "route": "/dashboard/not-visited"
+  },
+  {
+    "id": 3,
+    "name": "Checksheet Compliance",
+    "route": "/dashboard/checksheet"
   }
 ];
 
