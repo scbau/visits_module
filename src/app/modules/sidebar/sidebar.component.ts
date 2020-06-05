@@ -36,7 +36,63 @@ var TREE_DATA: FoodNode[] = [
   {
     "id": 3,
     "name": "Checksheet Compliance",
-    "route": "/dashboard/checksheet"
+    "route": "/dashboard/checksheet",
+    "children": [
+      {
+        "id": 31,
+        "name": "Forklift Pre-start Checksheet",
+        "route": "/dashboard/checksheet/forklift"
+      },
+      {
+        "id": 32,
+        "name": "VSR Pre-start Checksheet",
+        "route": "/dashboard/checksheet/vsr",
+        /*"children": [
+          {
+            "id": 321,
+            "name": "Daily",
+            "route": "/dashboard/checksheet/vsr/daily",
+          },
+          {
+            "id": 322,
+            "name": "Monthly",
+            "route": "/dashboard/checksheet/vsr/monthly",
+          },
+          {
+            "id": 323,
+            "name": "Maintenance",
+            "route": "/dashboard/checksheet/vsr/maintenance",
+          }
+        ]*/
+      }, 
+      {
+        "id": 33,
+        "name": "Warehouse Depot Checksheet",
+        "route": "/dashboard/checksheet/warehouse",
+        /*"children": [
+          {
+            "id": 331,
+            "name": "Daily",
+            "route": "/dashboard/checksheet/warehouse/daily",
+          },
+          {
+            "id": 332,
+            "name": "Weekly",
+            "route": "/dashboard/checksheet/warehouse/weekly",
+          },
+          {
+            "id": 333,
+            "name": "Monthly",
+            "route": "/dashboard/checksheet/warehouse/monthly",
+          },
+          {
+            "id": 334,
+            "name": "Bi-Annual/Annual",
+            "route": "/dashboard/checksheet/warehouse/biannual",
+          }
+        ]*/
+      }
+    ]
   }
 ];
 

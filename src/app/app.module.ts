@@ -40,6 +40,9 @@ import { LandingComponent } from './modules/landing/landing.component';
 import { DashboardComponent } from './modules/dashboard/dashboard.component';
 import { NotVisitedComponent } from './modules/notvisited/not.visited.component';
 import { ChecklistComponent } from './modules/checklist/checklist.component';
+import { VSRChecklistComponent } from './modules/checklist/vsr.checklist.component';
+import { ForkliftChecklistComponent } from './modules/checklist/forklift.checklist.component';
+import { WarehouseChecklistComponent } from './modules/checklist/warehouse.checklist.component';
 
 
 @NgModule({
@@ -51,7 +54,10 @@ import { ChecklistComponent } from './modules/checklist/checklist.component';
     LandingComponent,
     DashboardComponent,
     NotVisitedComponent,
-    ChecklistComponent
+    ChecklistComponent,
+    WarehouseChecklistComponent,
+    ForkliftChecklistComponent,
+    VSRChecklistComponent
   ],
   imports: [
     BrowserModule,
