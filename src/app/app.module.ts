@@ -34,6 +34,7 @@ import { InMemoryDataListService } from './services/in-memory/in-memory-datalist
 import { PersistenceService } from './services/persistence/persistence.service';
 
 import { VisitService } from './services/visit/visit.service';
+import { WarehouseService } from './services/warehouse/warehouse.service';
 
 import { DownloadComponent } from './modules/download/download.component';
 import { LandingComponent } from './modules/landing/landing.component';
@@ -80,7 +81,8 @@ import { WarehouseChecklistComponent } from './modules/checklist/warehouse.check
     BrowserAnimationsModule
   ],
   providers: [ 
-    VisitService, {
+    VisitService,
+    WarehouseService, {
     provide: APP_INITIALIZER,
     useFactory: (persistenceService: PersistenceService) => () => persistenceService.connect(),
     deps: [PersistenceService],
