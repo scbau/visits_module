@@ -6,6 +6,8 @@ import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { WarehouseService } from '../../services/warehouse/warehouse.service';
 
+import { FormControl } from '@angular/forms';
+
 export interface ChecklistData {
   timesChecked: number;
   timesCompliant: number;
@@ -100,6 +102,9 @@ export class WarehouseChecklistComponent implements OnInit, AfterViewInit {
   periods = CHECKLIST_OPTIONS[0].periodOptions;
   checklists = CHECKLIST_OPTIONS;
 
+  selectedRange;
+  weeks = [];
+
   // paginator size options
   pageSizeOptions = [10, 20, 40, 100];
 
@@ -113,7 +118,7 @@ export class WarehouseChecklistComponent implements OnInit, AfterViewInit {
     this.dataSource.paginator = this.paginator;
     this.dataSource.sort = this.sort;
 
-    /*this.selectedRange = new FormControl();
+    this.selectedRange = new FormControl();
 
     var startDate = moment(new Date(2020, 0, 1));
 
@@ -124,12 +129,13 @@ export class WarehouseChecklistComponent implements OnInit, AfterViewInit {
     var today = moment(new Date(2020, 11, 31)).isoWeekday('Sunday');
     while (startDate.isBefore(today)) {
       let startDateWeek = startDate.isoWeekday('Monday').format('DD-MM-YYYY');
-      let endDateWeek = startDate.isoWeekday('Sunday').add(7, 'days').format('DD-MM-YYYY');
+      // let endDateWeek = startDate.isoWeekday('Sunday').add(7, 'days').format('DD-MM-YYYY');
+      let endDateWeek = startDate.isoWeekday('Sunday').format('DD-MM-YYYY');
       startDate.add(7, 'days');
       this.weeks.push([startDateWeek, endDateWeek]);
     }
 
-    console.log(this.weeks);*/
+    console.log(this.weeks);
   }
 
   // filter period
