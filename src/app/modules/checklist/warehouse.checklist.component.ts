@@ -18,35 +18,93 @@ export interface ChecklistData {
   address: string;
 }
 
+const LAST_YEARS = 2;
+
 const DAILY = [
   { value: 0, displayValue: 'Today' },
+  { value: 1, displayValue: 'Yesterday' },
   { value: 7, displayValue: '7 days' },
   { value: 14, displayValue: '14 days' },
-  { value: 30, displayValue: '30 days' }
+  { value: 30, displayValue: '30 days' },
+  // { value: ??, displayValue: 'Custom range' }, // custom range?
 ];
 
-const WEEKLY = [
-  { value: 0, displayValue: 'Current week' },
-  { value: 1, displayValue: '1 week' },
-  { value: 2, displayValue: '2 weeks' },
-  { value: 4, displayValue: '4 weeks' },
-  { value: 8, displayValue: '8 weeks' }
-];
+var currentWeek = {};
 
-const MONTHLY = [
-  { value: 0, displayValue: 'Current month' },
-  { value: 1, displayValue: '1 month' },
-  { value: 3, displayValue: '3 months' },
-  { value: 6, displayValue: '6 months' },
-  { value: 12, displayValue: '12 months' }
-];
+const WEEKLY = (function() {
+  var options = [];
+  for (var i = LAST_YEARS; i >= 0; i--) {
+    var startYear = new Date(Date.now()).getFullYear() - i;
+    var startDate = moment(new Date(startYear, 0, 1));
 
-const ANNUAL = [
-  { value: 0, displayValue: 'Current year' },
-  { value: 1, displayValue: '1 year' },
-  { value: 2, displayValue: '2 years' },
-  { value: 4, displayValue: '4 years' }
-];
+    if (startDate.date() == 8) {
+      startDate = startDate.isoWeekday(-6);
+    }
+
+    var today = moment(new Date(startYear, 11, 31)).isoWeekday('Sunday');
+    while (startDate.isBefore(today)) {
+      let startDateWeek = startDate.isoWeekday('Monday').format('DD-MM-YYYY');
+      let startDateISO = startDate.toISOString();
+      // let endDateWeek = startDate.isoWeekday('Sunday').add(7, 'days').format('DD-MM-YYYY');
+      let endDateWeek = startDate.isoWeekday('Sunday').format('DD-MM-YYYY');
+      let endDateISO = startDate.toISOString();
+
+      startDate.add(7, 'days');
+      var item = {
+        value: startDateWeek,
+        endDate: endDateWeek,
+        displayValue: startDateWeek + " to " + endDateWeek
+      };
+
+      if (moment().isBetween(moment(startDateISO), moment(endDateISO))) {
+        currentWeek = item;
+      }
+      options.push(item);
+    }
+
+    console.log(options.length);
+  }
+
+  console.log(options);
+
+  return options;
+})();
+
+const MONTHLY = (function() {
+  var startYear = new Date(Date.now()).getFullYear();
+
+  var startDate = new Date(startYear - LAST_YEARS , 0);
+  var options = [{
+    value: startDate.toISOString,
+    displayValue: (startDate.getMonth() + 1) + "-" + startDate.getFullYear()
+  }];
+
+  while (options.length < (12 * (LAST_YEARS+1))) {
+    startDate.setMonth(startDate.getMonth() + 1)
+    options.push({
+      value: startDate.toISOString,
+      displayValue: (startDate.getMonth() + 1) + "-" + startDate.getFullYear()
+    });
+  }
+
+  console.log(options);
+  return options;
+})();
+
+
+const ANNUAL = (function() {
+  var startDate = new Date(Date.now()).getFullYear()-LAST_YEARS;
+  var options = [{ value: startDate, displayValue: startDate  }];
+
+  while (options.length < (LAST_YEARS+1)) {
+    startDate++;
+    options.push({ value: startDate, displayValue: startDate });
+  }
+
+  console.log(options);
+
+  return options;
+})();
 
 const CHECKLIST_OPTIONS = [
   {
@@ -83,6 +141,8 @@ const CHECKLIST_OPTIONS = [
 })
 export class WarehouseChecklistComponent implements OnInit, AfterViewInit {
 
+  options = new FormControl();
+
   displayedColumns: string[] = ['state', 'warehouse', 'address', 'timesChecked', 'timesCompliant', 'compliance', 'timesCritical'];
   dataSource = new MatTableDataSource<ChecklistData>([]);
 
@@ -90,7 +150,8 @@ export class WarehouseChecklistComponent implements OnInit, AfterViewInit {
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
   // filter values
-  public selectedPeriod = CHECKLIST_OPTIONS[0].periodOptions[0];
+  public selectedOption = [CHECKLIST_OPTIONS[0].periodOptions[0]];
+  // public selectedPeriod = CHECKLIST_OPTIONS[0].periodOptions[0];
   public selectedState = '';
   public selectedChecklist = CHECKLIST_OPTIONS[0];
 
@@ -141,7 +202,7 @@ export class WarehouseChecklistComponent implements OnInit, AfterViewInit {
   // filter period
   filter(data) {
     console.log(data.value == 7);
-    console.log(this.selectedPeriod);
+    // console.log(this.selectedPeriod);
     console.log(this.selectedState);
   }
 
@@ -170,8 +231,34 @@ export class WarehouseChecklistComponent implements OnInit, AfterViewInit {
     console.log(data);
 
     this.periods = data.value.periodOptions;
-    this.selectedPeriod = data.value.periodOptions[0];
+    // this.selectedPeriod = data.value.periodOptions[0];
+    // handle default value of period to be today / or range of today
+    // console.log(data.value.value);
+    // console.log((LAST_YEARS * 12) + new Date().getMonth());
+    // console.log(data.value.periodOptions[(LAST_YEARS * 12) + new Date().getMonth()]);
+    if (data.value.value == "weekly") {
+      // this.selectedPeriod = currentWeek;
+      this.selectedOption = [currentWeek];
+    }
+    else if (data.value.value == "monthly") {
+      // this.selectedPeriod = data.value.periodOptions[(LAST_YEARS * 12) + new Date().getMonth()];
+      this.selectedOption = [data.value.periodOptions[(LAST_YEARS * 12) + new Date().getMonth()]];
+    }
+    else if (data.value.value == "biannually") {
+      // this.selectedPeriod = data.value.periodOptions[data.value.periodOptions.length - 1];
+      this.selectedOption = [data.value.periodOptions[data.value.periodOptions.length - 1]];
+    }
+
     this.fetchData();
+  }
+
+  filterOptionList(data) {}
+
+  removeOption(data) {
+    if (this.selectedOption.length == 1) {
+      this.selectedOption = [];
+    }
+    else this.selectedOption.splice(data, 1);
   }
 
   // query data
@@ -190,6 +277,8 @@ export class WarehouseChecklistComponent implements OnInit, AfterViewInit {
     console.log(to.format('DD-MM-YYYY HH:mm:ss'));
 
     var params = { from, to };
+
+    console.log(params);
 
     // insert checklist type handling here
     // this.whService.fetchDailyCompliance(from.toISOString(), to.toISOString())

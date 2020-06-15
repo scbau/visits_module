@@ -147,7 +147,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
         // this.getHeroes();
         this.messageService.currentMessage.subscribe(message => { this.navbarText = message; console.log(message); });
 
-        this.navbarText = this.data.title;
+        this.navbarText = this.data.title || "";
     }
 
     /*getList(): void {

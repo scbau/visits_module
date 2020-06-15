@@ -144,17 +144,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
           var dataHolder = [];
 
           for (var item in perSloc) {
-            /*this.barChartData2.push({
-              data: [(perSloc[item].visit / perSloc[item].plan) * 100],
-              label: item
-            })*/
             dataHolder.push(((perSloc[item].visit / perSloc[item].plan) * 100).toFixed(0));
-
-            /*data.push({
-              x: ((perSloc[item].visit / perSloc[item].plan) * 100).toFixed(0),
-              y: item
-            });*/
-
             this.barChartLabels2.push(item);
           }
 
@@ -164,11 +154,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
             backgroundColor: "rgba(142,196,65,1)"
           });
         });
-    }/*
-    else {
-      this.visitService.fetchVisit()
-        .subscribe(data => { this.visits$ = data.data; console.log(this.visits$); });
-    }*/
+    }
   }
 
   ngOnInit(): void {
