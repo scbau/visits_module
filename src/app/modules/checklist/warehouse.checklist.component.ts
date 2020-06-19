@@ -4,9 +4,19 @@ import * as moment from 'moment';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
+import { ErrorStateMatcher } from '@angular/material/core';
+
 import { WarehouseService } from '../../services/warehouse/warehouse.service';
 
-import { FormControl } from '@angular/forms';
+import { FormControl, FormGroupDirective, NgForm, Validators } from '@angular/forms';
+
+/** Error when invalid control is dirty, touched, or submitted. */
+export class MyErrorStateMatcher implements ErrorStateMatcher {
+  isErrorState(control: FormControl | null, form: FormGroupDirective | NgForm | null): boolean {
+    const isSubmitted = form && form.submitted;
+    return !!(control && control.invalid && (control.dirty || control.touched || isSubmitted));
+  }
+}
 
 export interface ChecklistData {
   timesChecked: number;
@@ -18,9 +28,14 @@ export interface ChecklistData {
   address: string;
 }
 
+export interface PeriodData {
+  period: string;
+  close: string;
+}
+
 const LAST_YEARS = 2;
 
-const DAILY = [
+var DAILY = [
   { value: 0, displayValue: 'Today' },
   { value: 1, displayValue: 'Yesterday' },
   { value: 7, displayValue: '7 days' },
@@ -31,10 +46,11 @@ const DAILY = [
 
 var currentWeek = {};
 
-const WEEKLY = (function() {
+var WEEKLY = (function() {
   var options = [];
+  var start = new Date(Date.now()).getFullYear();
   for (var i = LAST_YEARS; i >= 0; i--) {
-    var startYear = new Date(Date.now()).getFullYear() - i;
+    var startYear = start - i;
     var startDate = moment(new Date(startYear, 0, 1));
 
     if (startDate.date() == 8) {
@@ -49,20 +65,22 @@ const WEEKLY = (function() {
       let endDateWeek = startDate.isoWeekday('Sunday').format('DD-MM-YYYY');
       let endDateISO = startDate.toISOString();
 
+      var end = new Date(endDateISO);
+      end.setDate(end.getDate() + 1);
+      end.setMilliseconds(end.getMilliseconds() - 1);
+
       startDate.add(7, 'days');
       var item = {
-        value: startDateWeek,
-        endDate: endDateWeek,
+        value: startDateISO,
+        end: end.toISOString(),
         displayValue: startDateWeek + " to " + endDateWeek
       };
 
-      if (moment().isBetween(moment(startDateISO), moment(endDateISO))) {
+      if (moment().isBetween(moment(startDateISO), moment(endDateISO), undefined, '[]')) { // 6/15 0:00:00 to 6/21   0:00:00
         currentWeek = item;
       }
       options.push(item);
     }
-
-    console.log(options.length);
   }
 
   console.log(options);
@@ -70,38 +88,65 @@ const WEEKLY = (function() {
   return options;
 })();
 
-const MONTHLY = (function() {
+var MONTHLY = (function() {
   var startYear = new Date(Date.now()).getFullYear();
 
-  var startDate = new Date(startYear - LAST_YEARS , 0);
+  var startDate = new Date(startYear - LAST_YEARS , 0, 1);
+  startDate.setHours(0, 0, 0, 0);
+
+  var endDate = new Date(startDate);
+  endDate.setMonth(endDate.getMonth() + 1);
+  endDate.setMilliseconds(endDate.getMilliseconds() - 1);
+
   var options = [{
-    value: startDate.toISOString,
+    value: startDate.toISOString(),
+    end: endDate.toISOString(),
     displayValue: (startDate.getMonth() + 1) + "-" + startDate.getFullYear()
   }];
 
   while (options.length < (12 * (LAST_YEARS+1))) {
-    startDate.setMonth(startDate.getMonth() + 1)
+    startDate.setMonth(startDate.getMonth() + 1);
+    endDate = new Date(startDate);
+    endDate.setMonth(endDate.getMonth() + 1);
+    endDate.setMilliseconds(endDate.getMilliseconds() - 1);
+
     options.push({
-      value: startDate.toISOString,
+      value: startDate.toISOString(),
+      end: endDate.toISOString(),
       displayValue: (startDate.getMonth() + 1) + "-" + startDate.getFullYear()
     });
   }
 
-  console.log(options);
+  console.log("MONTHLY", options);
   return options;
 })();
 
 
-const ANNUAL = (function() {
-  var startDate = new Date(Date.now()).getFullYear()-LAST_YEARS;
-  var options = [{ value: startDate, displayValue: startDate  }];
+var ANNUAL = (function() {
+  var startDate = new Date(Date.now());
+  startDate.setFullYear(startDate.getFullYear() - LAST_YEARS, 0, 1);
+  startDate.setHours(0, 0, 0, 0);
+  var endDate = new Date(startDate);
+  endDate.setFullYear(endDate.getFullYear() + 1);
+  endDate.setMilliseconds(endDate.getMilliseconds() - 1);
+
+  var options = [{ 
+    value: startDate.toISOString(), 
+    end: endDate.toISOString(),
+    displayValue: startDate.getFullYear()  
+  }];
 
   while (options.length < (LAST_YEARS+1)) {
-    startDate++;
-    options.push({ value: startDate, displayValue: startDate });
+    startDate.setFullYear(startDate.getFullYear() + 1);
+    endDate.setFullYear(endDate.getFullYear() + 1);
+    options.push({ 
+      value: startDate.toISOString(),
+      end: endDate.toISOString(), 
+      displayValue: startDate.getFullYear() 
+    });
   }
 
-  console.log(options);
+  console.log("ANNUAL", options);
 
   return options;
 })();
@@ -141,16 +186,22 @@ const CHECKLIST_OPTIONS = [
 })
 export class WarehouseChecklistComponent implements OnInit, AfterViewInit {
 
-  options = new FormControl();
+  options = new FormControl('valid', [
+    Validators.required,
+  ]);
+  matcher = new MyErrorStateMatcher();
 
   displayedColumns: string[] = ['state', 'warehouse', 'address', 'timesChecked', 'timesCompliant', 'compliance', 'timesCritical'];
+  displayedOptionColumns: string[] = ['period', 'close'];
   dataSource = new MatTableDataSource<ChecklistData>([]);
 
   @ViewChild('paginator') paginator: MatPaginator;
+  @ViewChild('paginator2') paginator2: MatPaginator;
   @ViewChild(MatSort, { static: true }) sort: MatSort;
 
   // filter values
   public selectedOption = [CHECKLIST_OPTIONS[0].periodOptions[0]];
+  optionSource = new MatTableDataSource<PeriodData>(this.selectedOption);
   // public selectedPeriod = CHECKLIST_OPTIONS[0].periodOptions[0];
   public selectedState = '';
   public selectedChecklist = CHECKLIST_OPTIONS[0];
@@ -163,9 +214,6 @@ export class WarehouseChecklistComponent implements OnInit, AfterViewInit {
   periods = CHECKLIST_OPTIONS[0].periodOptions;
   checklists = CHECKLIST_OPTIONS;
 
-  selectedRange;
-  weeks = [];
-
   // paginator size options
   pageSizeOptions = [10, 20, 40, 100];
 
@@ -176,34 +224,7 @@ export class WarehouseChecklistComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
-    this.dataSource.paginator = this.paginator;
-    this.dataSource.sort = this.sort;
-
-    this.selectedRange = new FormControl();
-
-    var startDate = moment(new Date(2020, 0, 1));
-
-    if (startDate.date() == 8) {
-      startDate = startDate.isoWeekday(-6);
-    }
-
-    var today = moment(new Date(2020, 11, 31)).isoWeekday('Sunday');
-    while (startDate.isBefore(today)) {
-      let startDateWeek = startDate.isoWeekday('Monday').format('DD-MM-YYYY');
-      // let endDateWeek = startDate.isoWeekday('Sunday').add(7, 'days').format('DD-MM-YYYY');
-      let endDateWeek = startDate.isoWeekday('Sunday').format('DD-MM-YYYY');
-      startDate.add(7, 'days');
-      this.weeks.push([startDateWeek, endDateWeek]);
-    }
-
-    console.log(this.weeks);
-  }
-
-  // filter period
-  filter(data) {
-    console.log(data.value == 7);
-    // console.log(this.selectedPeriod);
-    console.log(this.selectedState);
+    this.updateDataSource(this.currentElementData);
   }
 
   // filter state
@@ -228,60 +249,73 @@ export class WarehouseChecklistComponent implements OnInit, AfterViewInit {
 
   // filter checklist type (daily, weekly, monthly, biannually)
   filterChecklist(data) {
-    console.log(data);
-
     this.periods = data.value.periodOptions;
-    // this.selectedPeriod = data.value.periodOptions[0];
-    // handle default value of period to be today / or range of today
-    // console.log(data.value.value);
-    // console.log((LAST_YEARS * 12) + new Date().getMonth());
-    // console.log(data.value.periodOptions[(LAST_YEARS * 12) + new Date().getMonth()]);
-    if (data.value.value == "weekly") {
-      // this.selectedPeriod = currentWeek;
-      this.selectedOption = [currentWeek];
-    }
-    else if (data.value.value == "monthly") {
-      // this.selectedPeriod = data.value.periodOptions[(LAST_YEARS * 12) + new Date().getMonth()];
-      this.selectedOption = [data.value.periodOptions[(LAST_YEARS * 12) + new Date().getMonth()]];
-    }
-    else if (data.value.value == "biannually") {
-      // this.selectedPeriod = data.value.periodOptions[data.value.periodOptions.length - 1];
-      this.selectedOption = [data.value.periodOptions[data.value.periodOptions.length - 1]];
-    }
+    var tempArray = [];
 
+    if (data.value.value == "daily") { // daily checklist handler
+      // !!!TODO
+      console.log("daily checklist")
+    }
+    else if (data.value.value == "weekly") { // weekly checklist handler
+      tempArray.push(currentWeek);
+    }
+    else if (data.value.value == "monthly") { // monthly checklist handler
+      tempArray.push(data.value.periodOptions[(LAST_YEARS * 12) + new Date().getMonth()]);
+    }
+    else if (data.value.value == "biannually") { // biannually checklist handler
+      tempArray.push(data.value.periodOptions[data.value.periodOptions.length - 1]);
+    }
+    this.updateOptionSource(tempArray);
     this.fetchData();
   }
 
-  filterOptionList(data) {}
+  filterOptionList(data) {
+    this.optionSource = new MatTableDataSource<PeriodData>(this.selectedOption);
+    this.optionSource.paginator = this.paginator2;
+  }
+
+  private updateOptionSource(optionList) {
+    this.selectedOption = optionList;
+    this.optionSource = new MatTableDataSource<PeriodData>(this.selectedOption);
+    this.optionSource.paginator = this.paginator2;
+  }
+
+  private updateDataSource(dataList) {
+    this.currentElementData = dataList;
+    var tempArray = [];
+    if (!this.selectedState) {
+      tempArray = this.currentElementData;
+    }
+    else {
+      // this.dataSource = new MatTableDataSource
+      tempArray = this.currentElementData.filter(item => item.state == this.selectedState)
+    }
+    this.dataSource = new MatTableDataSource<ChecklistData>(tempArray);
+    this.dataSource.paginator = this.paginator;
+    this.dataSource.sort = this.sort;
+    this.pageSizeOptions[3] = this.currentElementData.length;
+  }
 
   removeOption(data) {
-    if (this.selectedOption.length == 1) {
-      this.selectedOption = [];
-    }
-    else this.selectedOption.splice(data, 1);
+    var tempArray = this.selectedOption.filter(function(value, index, arr) {
+      return value.value != data.value;
+    });
+
+    this.updateOptionSource(tempArray);
   }
 
   // query data
   fetchData() {
-    var toDate = new Date();
-    toDate.setHours(23, 59, 59, 999);
-
-    var fromDate = new Date();
-    fromDate.setDate(fromDate.getDate() - 7); // insert period handling here
-    fromDate.setHours(0, 0, 0, 0);
-
-    var to = moment(toDate);
-    var from = moment(fromDate);
-
-    console.log(from.format('DD-MM-YYYY HH:mm:ss'));
-    console.log(to.format('DD-MM-YYYY HH:mm:ss'));
-
-    var params = { from, to };
+    // handle what type of checklist is displayed and must update date range default value
+    var params = [];
+    if (this.selectedChecklist.value != 'daily') {
+      for (var option of this.selectedOption) {
+        params.push({ from: option.value, to: option.end });
+      }
+    }
 
     console.log(params);
 
-    // insert checklist type handling here
-    // this.whService.fetchDailyCompliance(from.toISOString(), to.toISOString())
     this.whService.fetchData(this.selectedChecklist.value, params)  
       .subscribe((data: any) => {
         console.log(data);
@@ -320,12 +354,29 @@ export class WarehouseChecklistComponent implements OnInit, AfterViewInit {
         console.log(states);
         console.log(Object.keys(states));
 
-        // this.states = Object.keys(states);
-        this.currentElementData = result;
-        this.dataSource = new MatTableDataSource<ChecklistData>(this.currentElementData);
-        this.dataSource.paginator = this.paginator;
-        this.dataSource.sort = this.sort;
-        this.pageSizeOptions[3] = this.currentElementData.length;
+        this.updateDataSource(result);
       });
+  }
+
+  resetPeriodFilter() {
+
+    var data = this.selectedChecklist, tempArray = [];
+
+    if (data.value == "daily") { // daily checklist handler
+      //
+      console.log("daily checklist")
+    }
+    else if (data.value == "weekly") { // weekly checklist handler
+      tempArray.push(currentWeek);
+    }
+    else if (data.value == "monthly") { // monthly checklist handler
+      tempArray.push(data.periodOptions[(LAST_YEARS * 12) + new Date().getMonth()]);
+    }
+    else if (data.value == "biannually") { // biannually checklist handler
+      tempArray.push(data.periodOptions[data.periodOptions.length - 1]);
+    }
+
+    this.updateOptionSource(tempArray);
+    this.fetchData();
   }
 }
