@@ -34,7 +34,7 @@ import { InMemoryDataListService } from './services/in-memory/in-memory-datalist
 import { PersistenceService } from './services/persistence/persistence.service';
 
 import { VisitService } from './services/visit/visit.service';
-import { WarehouseService } from './services/warehouse/warehouse.service';
+import { ChecklistService } from './services/checklist/checklist.service';
 
 import { DownloadComponent } from './modules/download/download.component';
 import { LandingComponent } from './modules/landing/landing.component';
@@ -44,6 +44,7 @@ import { ChecklistComponent } from './modules/checklist/checklist.component';
 import { VSRChecklistComponent } from './modules/checklist/vsr.checklist.component';
 import { ForkliftChecklistComponent } from './modules/checklist/forklift.checklist.component';
 import { WarehouseChecklistComponent } from './modules/checklist/warehouse.checklist.component';
+import { SettingsComponent } from './modules/settings/settings.component';
 
 
 @NgModule({
@@ -58,7 +59,8 @@ import { WarehouseChecklistComponent } from './modules/checklist/warehouse.check
     ChecklistComponent,
     WarehouseChecklistComponent,
     ForkliftChecklistComponent,
-    VSRChecklistComponent
+    VSRChecklistComponent,
+    SettingsComponent
   ],
   imports: [
     BrowserModule,
@@ -82,7 +84,7 @@ import { WarehouseChecklistComponent } from './modules/checklist/warehouse.check
   ],
   providers: [ 
     VisitService,
-    WarehouseService, {
+    ChecklistService, {
     provide: APP_INITIALIZER,
     useFactory: (persistenceService: PersistenceService) => () => persistenceService.connect(),
     deps: [PersistenceService],

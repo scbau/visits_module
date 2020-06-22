@@ -8,21 +8,9 @@
     </mat-toolbar>
 
     <mat-sidenav-container class="sidenav-container">
-        <mat-sidenav #snav>
-          <!-- <mat-nav-list>
-            <mat-accordion multi="true">
-                <mat-expansion-panel *ngFor="let nav of fillerNav">
-                    <mat-expansion-panel-header>
-                        <mat-panel-title>
-                            {{ nav.label }}
-                        </mat-panel-title>
-                    </mat-expansion-panel-header>
-
-                    <a mat-list-item routerLink="." *ngFor="let i of nav.contents">{{ i.label }}</a>
-                </mat-expansion-panel>
-            </mat-accordion>
-          </mat-nav-list> -->
-          <mat-tree [dataSource]="dataSource" [treeControl]="treeControl" class="example-tree" style="margin: 20px;">
+      <mat-sidenav #snav>
+        <div style="height: 100%;" fxLayout="column" fxLayoutAlign="space-between stretch">
+          <mat-tree [dataSource]="dataSource" [treeControl]="treeControl" class="example-tree" style="margin: 10px;">
             <!-- This is the tree node template for leaf nodes -->
             <mat-tree-node *matTreeNodeDef="let node" matTreeNodeToggle matTreeNodePadding>
               <!-- <mat-nav-list [ngClass]="{'sidenavitem-selected': node.selected==true}"> -->
@@ -65,7 +53,14 @@
               </li>
             </mat-nested-tree-node>
           </mat-tree>
-        </mat-sidenav>
+          <div style="margin: 10px;">
+            <button mat-button style="text-align: left; width: 100%;" (click)="snav.toggle(); openSettings()">
+              <mat-icon>settings</mat-icon>
+              Settings
+            </button>
+          </div>
+        </div>
+      </mat-sidenav>
 
         <mat-sidenav-content>
           <!-- <p *ngFor="let content of fillerContent">{{content}}</p> -->

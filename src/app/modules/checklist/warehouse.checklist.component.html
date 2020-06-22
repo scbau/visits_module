@@ -37,7 +37,32 @@
         </mat-list-item>
       </mat-list> -->
 
-      <mat-form-field>
+      <mat-form-field *ngIf="selectedChecklist.value == 'daily'">
+        <mat-label>Date Range</mat-label>
+        <mat-select 
+          [formControl]="optionsDaily" 
+          (selectionChange)="filterOptionList($event)" 
+          [(ngModel)]="selectedOptionDaily" 
+          [errorStateMatcher]="matcherDaily">
+          <!-- <mat-select-trigger>
+            {{options.value ? options.value[0]?.displayValue : ''}}
+            <span *ngIf="options.value?.length > 1">
+              (+{{options.value.length - 1}} {{options.value?.length === 2 ? 'other' : 'others'}})
+            </span>
+          </mat-select-trigger> -->
+          <!-- <mat-option>
+            None
+          </mat-option> -->
+          <mat-option *ngFor="let period of periods" [value]="period">
+          <!-- <mat-option *ngFor="let period of periods" [value]="period" [disabled]="options.value?.length == 1 && options.value?.includes(period)"> -->
+            {{ period.displayValue }}
+          </mat-option>
+        </mat-select>
+        <!-- <mat-hint>Errors appear instantly!</mat-hint> -->
+        <mat-error *ngIf="options.hasError('required')">Must select a date range to display.</mat-error>
+      </mat-form-field>
+
+      <mat-form-field *ngIf="selectedChecklist.value != 'daily'">
         <mat-label>Date Range</mat-label>
         <mat-select 
           [formControl]="options" 
@@ -78,7 +103,7 @@
       </div>
       <!-- </mat-form-field> -->
 
-      <table mat-table [dataSource]="optionSource" class="mat-elevation-z8" style="width: 100%;">
+      <table *ngIf="selectedChecklist.value != 'daily'" mat-table [dataSource]="optionSource" class="mat-elevation-z8" style="width: 100%;">
 
         <ng-container matColumnDef="period">
           <th style="width: 90%!important;" mat-header-cell *matHeaderCellDef> Period </th>
@@ -97,7 +122,7 @@
         <!-- <tr mat-header-row *matHeaderRowDef="displayedOptionColumns; sticky: true"></tr> -->
         <tr mat-row *matRowDef="let row; columns: displayedOptionColumns;"></tr>
       </table>
-      <mat-paginator class="mat-elevation-z8" #paginator2 [pageSizeOptions]="[5, 10, 15]"></mat-paginator>
+      <mat-paginator *ngIf="selectedChecklist.value != 'daily'" class="mat-elevation-z8" #paginator2 [pageSizeOptions]="[5, 10, 15]"></mat-paginator>
     </div>
     
   </div>

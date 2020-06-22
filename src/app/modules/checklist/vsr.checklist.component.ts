@@ -1,98 +1,148 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 import * as moment from 'moment';
 
 import { MatPaginator } from '@angular/material/paginator';
+import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
-import { VisitService } from '../../services/visit/visit.service'
+import { ErrorStateMatcher } from '@angular/material/core';
+
+import { ChecklistService } from '../../services/checklist/checklist.service';
+
+import { FormControl, FormGroupDirective, NgForm, Validators } from '@angular/forms';
+
+/** Error when invalid control is dirty, touched, or submitted. */
+export class MyErrorStateMatcher implements ErrorStateMatcher {
+  isErrorState(control: FormControl | null, form: FormGroupDirective | NgForm | null): boolean {
+    const isSubmitted = form && form.submitted;
+    return !!(control && control.invalid && (control.dirty || control.touched || isSubmitted));
+  }
+}
 
 export interface ChecklistData {
   timesChecked: number;
   timesCompliant: number;
   compliance: string;
   timesCritical: number;
-  location: string;
-  forklift: string;
+  state: string;
+  vehicle: string;
+  address: string;
 }
 
+export interface PeriodData {
+  displayValue: string;
+}
 
-const ELEMENT_DATA: ChecklistData[] = [
-  { timesChecked: 7, forklift: 'Forklift 1', location: 'NSW', timesCompliant: 5, compliance: "71%", timesCritical: 0 },
-  { timesChecked: 6, forklift: 'Forklift 2', location: 'NSW', timesCompliant: 6, compliance: "100%", timesCritical: 1 },
-  { timesChecked: 3, forklift: 'Forklift 1', location: 'SA', timesCompliant: 1, compliance: "33%", timesCritical: 1 },
-  { timesChecked: 2, forklift: 'Forklift 2', location: 'SA', timesCompliant: 1, compliance: "50%", timesCritical: 0 },
-  // { timesChecked: 20, location: 'Hydrogen', timesCompliant: 15, compliance: "75%", timesCritical: 2 },
-];
+const LAST_YEARS = 2;
 
+const DAILY = (function() {
+  var startDate = new Date(Date.now());
+  startDate.setHours(0, 0, 0, 0);
+  var endDate = new Date(startDate);
+  endDate.setDate(endDate.getDate() + 1);
+  endDate.setMilliseconds(endDate.getMilliseconds() - 1);
 
-const ELEMENT_DATA2: ChecklistData[] = [
-  { timesChecked: 14, forklift: 'Forklift 1', location: 'NSW', timesCompliant: 8, compliance: "64%", timesCritical: 2 },
-  { timesChecked: 10, forklift: 'Forklift 2', location: 'NSW', timesCompliant: 10, compliance: "100%", timesCritical: 0 },
-  { timesChecked: 5, forklift: 'Forklift 1', location: 'SA', timesCompliant: 1, compliance: "20%", timesCritical: 1 },
-  { timesChecked: 9, forklift: 'Forklift 2', location: 'SA', timesCompliant: 4, compliance: "89%", timesCritical: 5 },
-  // { timesChecked: 20, location: 'Hydrogen', timesCompliant: 15, compliance: "75%", timesCritical: 2 },
-];
+  var options = [{
+    value: startDate.toISOString(),
+    end: endDate.toISOString(),
+    displayValue: "Today"
+  }];
 
-const ELEMENT_DATA3: ChecklistData[] = [
-  { timesChecked: 30, forklift: 'Forklift 1', location: 'NSW', timesCompliant: 23, compliance: "77%", timesCritical: 4 },
-  { timesChecked: 12, forklift: 'Forklift 2', location: 'NSW', timesCompliant: 10, compliance: "83%", timesCritical: 0 },
-  { timesChecked: 10, forklift: 'Forklift 1', location: 'SA', timesCompliant: 3, compliance: "33%", timesCritical: 1 },
-  { timesChecked: 16, forklift: 'Forklift 2', location: 'SA', timesCompliant: 10, compliance: "62%", timesCritical: 5 },
-  // { timesChecked: 20, location: 'Hydrogen', timesCompliant: 15, compliance: "75%", timesCritical: 2 },
-];
+  startDate.setDate(startDate.getDate() - 1);
+  endDate = new Date(startDate);
+  endDate.setDate(endDate.getDate() + 1);
+  endDate.setMilliseconds(endDate.getMilliseconds() - 1);
 
-const ELEMENT_DATA_VSR: ChecklistData[] = [
-  { timesChecked: 7, forklift: 'VSR Vehicle 1', location: 'NSW', timesCompliant: 4, compliance: "57%", timesCritical: 3 },
-  { timesChecked: 5, forklift: 'VSR Vehicle 2', location: 'NSW', timesCompliant: 3, compliance: "60%", timesCritical: 1 },
-  { timesChecked: 4, forklift: 'VSR Vehicle 1', location: 'STAU', timesCompliant: 2, compliance: "50%", timesCritical: 1 },
-  { timesChecked: 4, forklift: 'VSR Vehicle 2', location: 'STAU', timesCompliant: 3, compliance: "75%", timesCritical: 1 },
-  { timesChecked: 7, forklift: 'VSR Vehicle 1', location: 'QLD', timesCompliant: 4, compliance: "57%", timesCritical: 3 },
-  { timesChecked: 5, forklift: 'VSR Vehicle 2', location: 'QLD', timesCompliant: 3, compliance: "60%", timesCritical: 1 },
-  { timesChecked: 4, forklift: 'VSR Vehicle 1', location: 'VIC', timesCompliant: 2, compliance: "50%", timesCritical: 1 },
-  { timesChecked: 4, forklift: 'VSR Vehicle 2', location: 'VIC', timesCompliant: 3, compliance: "75%", timesCritical: 1 },
-  { timesChecked: 7, forklift: 'VSR Vehicle 1', location: 'WA', timesCompliant: 4, compliance: "57%", timesCritical: 3 },
-  { timesChecked: 5, forklift: 'VSR Vehicle 2', location: 'WA', timesCompliant: 3, compliance: "60%", timesCritical: 1 },
-  // { timesChecked: 20, location: 'Hydrogen', timesCompliant: 15, compliance: "75%", timesCritical: 2 },
-];
+  options.push({
+    value: startDate.toISOString(),
+    end: endDate.toISOString(),
+    displayValue: "Yesterday"
+  });
 
-const ELEMENT_DATA_VSR2: ChecklistData[] = [
-  { timesChecked: 14, forklift: 'VSR Vehicle 1', location: 'NSW', timesCompliant: 10, compliance: "71%", timesCritical: 3 },
-  { timesChecked: 10, forklift: 'VSR Vehicle 2', location: 'NSW', timesCompliant: 8, compliance: "80%", timesCritical: 1 },
-  { timesChecked: 5, forklift: 'VSR Vehicle 1', location: 'STAU', timesCompliant: 1, compliance: "20%", timesCritical: 1 },
-  { timesChecked: 9, forklift: 'VSR Vehicle 2', location: 'STAU', timesCompliant: 8, compliance: "89%", timesCritical: 1 },
-  { timesChecked: 14, forklift: 'VSR Vehicle 1', location: 'QLD', timesCompliant: 10, compliance: "71%", timesCritical: 3 },
-  { timesChecked: 10, forklift: 'VSR Vehicle 2', location: 'QLD', timesCompliant: 8, compliance: "80%", timesCritical: 1 },
-  { timesChecked: 5, forklift: 'VSR Vehicle 1', location: 'VIC', timesCompliant: 1, compliance: "20%", timesCritical: 1 },
-  { timesChecked: 9, forklift: 'VSR Vehicle 2', location: 'VIC', timesCompliant: 8, compliance: "89%", timesCritical: 1 },
-  { timesChecked: 14, forklift: 'VSR Vehicle 1', location: 'WA', timesCompliant: 10, compliance: "71%", timesCritical: 3 },
-  { timesChecked: 10, forklift: 'VSR Vehicle 2', location: 'WA', timesCompliant: 8, compliance: "80%", timesCritical: 1 },
-  // { timesChecked: 20, location: 'Hydrogen', timesCompliant: 15, compliance: "75%", timesCritical: 2 },
-];
+  startDate = new Date(Date.now());
+  startDate.setHours(0, 0, 0, 0);
+  startDate.setDate(startDate.getDate() - 7);
+  endDate = new Date(startDate);
+  endDate.setDate(endDate.getDate() + 7);
+  endDate.setMilliseconds(endDate.getMilliseconds() - 1);
 
-const ELEMENT_DATA_VSR3: ChecklistData[] = [
-  { timesChecked: 30, forklift: 'VSR Vehicle 1', location: 'NSW', timesCompliant: 23, compliance: "77%", timesCritical: 4 },
-  { timesChecked: 12, forklift: 'VSR Vehicle 2', location: 'NSW', timesCompliant: 10, compliance: "83%", timesCritical: 1 },
-  { timesChecked: 10, forklift: 'VSR Vehicle 1', location: 'STAU', timesCompliant: 3, compliance: "33%", timesCritical: 2 },
-  { timesChecked: 16, forklift: 'VSR Vehicle 2', location: 'STAU', timesCompliant: 12, compliance: "75%", timesCritical: 3 },
-  { timesChecked: 30, forklift: 'VSR Vehicle 1', location: 'QLD', timesCompliant: 23, compliance: "77%", timesCritical: 4 },
-  { timesChecked: 12, forklift: 'VSR Vehicle 2', location: 'QLD', timesCompliant: 10, compliance: "83%", timesCritical: 1 },
-  { timesChecked: 10, forklift: 'VSR Vehicle 1', location: 'VIC', timesCompliant: 3, compliance: "33%", timesCritical: 2 },
-  { timesChecked: 16, forklift: 'VSR Vehicle 2', location: 'VIC', timesCompliant: 12, compliance: "75%", timesCritical: 3 },
-  { timesChecked: 30, forklift: 'VSR Vehicle 1', location: 'WA', timesCompliant: 23, compliance: "77%", timesCritical: 4 },
-  { timesChecked: 12, forklift: 'VSR Vehicle 2', location: 'WA', timesCompliant: 10, compliance: "83%", timesCritical: 1 },
-  // { timesChecked: 20, location: 'Hydrogen', timesCompliant: 15, compliance: "75%", timesCritical: 2 },
-];
+  options.push({
+    value: startDate.toISOString(),
+    end: endDate.toISOString(),
+    displayValue: "Last 7 days"
+  });
 
-const DAILY = [
-  { value: 7, viewValue: '7 days' },
-  { value: 14, viewValue: '14 days' },
-  { value: 30, viewValue: '30 days' }
-];
+  startDate = new Date(Date.now());
+  startDate.setHours(0, 0, 0, 0);
+  startDate.setDate(startDate.getDate() - 14);
+  endDate = new Date(startDate);
+  endDate.setDate(endDate.getDate() + 14);
+  endDate.setMilliseconds(endDate.getMilliseconds() - 1);
 
-const MONTHLY = [
-  { value: 3, viewValue: '3 months' },
-  { value: 6, viewValue: '6 months' },
-  { value: 12, viewValue: '12 months' }
-];
+  options.push({
+    value: startDate.toISOString(),
+    end: endDate.toISOString(),
+    displayValue: "Last 14 days"
+  });
+
+  console.log(options);
+  return options;
+})();
+
+const MAINTENANCE = DAILY;
+
+const MONTHLY = (function() {
+  var startYear = new Date(Date.now()).getFullYear();
+
+  var startDate = new Date(startYear - LAST_YEARS, 0, 1);
+  startDate.setHours(0, 0, 0, 0);
+
+  var endDate = new Date(startDate);
+  endDate.setMonth(endDate.getMonth() + 1);
+  endDate.setMilliseconds(endDate.getMilliseconds() - 1);
+
+  var options = [{
+    value: startDate.toISOString(),
+    end: endDate.toISOString(),
+    displayValue: (startDate.getMonth() + 1) + "-" + startDate.getFullYear()
+  }];
+
+  while (options.length < (12 * (LAST_YEARS + 1))) {
+    startDate.setMonth(startDate.getMonth() + 1);
+    endDate = new Date(startDate);
+    endDate.setMonth(endDate.getMonth() + 1);
+    endDate.setMilliseconds(endDate.getMilliseconds() - 1);
+
+    options.push({
+      value: startDate.toISOString(),
+      end: endDate.toISOString(),
+      displayValue: (startDate.getMonth() + 1) + "-" + startDate.getFullYear()
+    });
+  }
+
+  console.log("MONTHLY", options);
+  return options;
+})();
+
+const CHECKLIST_OPTIONS = [
+  {
+    value: 'daily',
+    displayValue: 'Daily',
+    periodOptions: DAILY,
+    dateUnit: 1
+  },
+  {
+    value: 'monthly',
+    displayValue: 'Monthly',
+    periodOptions: MONTHLY,
+    dateUnit: 30
+  },
+  {
+    value: 'maintenance',
+    displayValue: 'Maintenance',
+    periodOptions: MAINTENANCE,
+    dateUnit: 1
+  }
+]
 
 
 @Component({
@@ -100,124 +150,201 @@ const MONTHLY = [
   templateUrl: './vsr.checklist.component.html',
   styleUrls: ['./checklist.component.css']
 })
-export class VSRChecklistComponent implements OnInit {
+export class VSRChecklistComponent implements OnInit, AfterViewInit {
 
-  displayedColumns: string[] = ['location', 'forklift', 'timesChecked', 'timesCompliant', 'compliance', 'timesCritical'];
-  dataSource = new MatTableDataSource<ChecklistData>(ELEMENT_DATA);
-  dataSource2 = new MatTableDataSource<ChecklistData>(ELEMENT_DATA_VSR);
+  options = new FormControl('valid', [
+    Validators.required,
+  ]);
+  optionsDaily = new FormControl('valid', [
+    Validators.required,
+  ]);
+  matcher = new MyErrorStateMatcher();
+  matcherDaily = new MyErrorStateMatcher();
 
-  @ViewChild('paginator1') paginator1: MatPaginator;
+  displayedColumns: string[] = ['state', 'vehicle', 'address', 'timesChecked', 'timesCompliant', 'compliance', 'timesCritical'];
+  displayedOptionColumns: string[] = ['period', 'close'];
+  dataSource = new MatTableDataSource<ChecklistData>([]);
+
+  @ViewChild('paginator') paginator: MatPaginator;
   @ViewChild('paginator2') paginator2: MatPaginator;
+  @ViewChild(MatSort, { static: true }) sort: MatSort;
 
-  public selectedOption = 7;
-  public selectedOptionVSR = '7';
-  public selectedState = 'All';
-  public selectedChecklist = 'Daily';
+  public selectedOption = [CHECKLIST_OPTIONS[0].periodOptions[0]];
+  selectedOptionDaily = DAILY[0];
+  optionSource = new MatTableDataSource<PeriodData>(this.selectedOption);
+  // optionSource = new MatTableDataSource<PeriodData>([]);
+  // public selectedPeriod = CHECKLIST_OPTIONS[0].periodOptions[0];
+  public selectedState = '';
+  public selectedChecklist = CHECKLIST_OPTIONS[0];
 
-  public weeks = [];
+  // data array
+  currentElementData = [];
 
-  currentElementData = ELEMENT_DATA_VSR;
+  // filter options array 
+  states = ["ACT", "NSW", "NZ", "NT", "QLD", "SA", "TAS", "VIC", "WA"];
+  periods = CHECKLIST_OPTIONS[0].periodOptions;
+  checklists = CHECKLIST_OPTIONS;
 
+  // paginator size options
+  pageSizeOptions = [10, 20, 40, 100];
 
-  periods = DAILY;
+  constructor(private checklistService: ChecklistService) { }
 
-  constructor(private visitService: VisitService) { }
+  ngAfterViewInit(): void {
+    this.fetchData();
+  }
 
   ngOnInit(): void {
-    this.dataSource.paginator = this.paginator1;
-    this.dataSource2.paginator = this.paginator2;
-
-    var startDate = moment(new Date(2020, 0, 1));
-
-    if (startDate.date() == 8) {
-      startDate = startDate.isoWeekday(-6);
-    }
-
-    var today = moment(new Date(2020, 11, 31)).isoWeekday('Sunday');
-    while (startDate.isBefore(today)) {
-      let startDateWeek = startDate.isoWeekday('Monday').format('DD-MM-YYYY');
-      let endDateWeek = startDate.isoWeekday('Sunday').add(7, 'days').format('DD-MM-YYYY');
-      startDate.add(7, 'days');
-      this.weeks.push([startDateWeek, endDateWeek]);
-    }
-
-    console.log(this.weeks);
+    this.updateDataSource(this.currentElementData);
   }
 
-  filter(data) {
-    console.log(data);
-    console.log(data.value == 7);
-    console.log(this.selectedOption);
-    console.log(this.selectedState);
-    if (data.value == 7) {
-      console.log(data.value);
-      this.currentElementData = ELEMENT_DATA_VSR;
-      if (this.selectedState != "All") {
-        this.dataSource2 = new MatTableDataSource<ChecklistData>(ELEMENT_DATA_VSR.filter(item => item.location == this.selectedState));
-      }
-      else {
-        this.dataSource2 = new MatTableDataSource<ChecklistData>(ELEMENT_DATA_VSR);
-      }
-    }
-    else if (data.value == 14) {
-      console.log(data.value);
-      this.currentElementData = ELEMENT_DATA_VSR2;
-      if (this.selectedState != "All") {
-        this.dataSource2 = new MatTableDataSource<ChecklistData>(ELEMENT_DATA_VSR2.filter(item => item.location == this.selectedState));
-      }
-      else {
-        this.dataSource2 = new MatTableDataSource<ChecklistData>(ELEMENT_DATA_VSR2);
-      }
-    }
-    else if (data.value == 30) {
-      console.log(data.value);
-      this.currentElementData = ELEMENT_DATA_VSR3;
-      if (this.selectedState != "All") {
-        this.dataSource2 = new MatTableDataSource<ChecklistData>(ELEMENT_DATA_VSR3.filter(item => item.location == this.selectedState));
-      }
-      else {
-        this.dataSource2 = new MatTableDataSource<ChecklistData>(ELEMENT_DATA_VSR3);
-      }
-    }
-  }
-
+  // filter state
   filterState(data) {
     console.log(data);
-    if (data.value == 'NSW') {
-      console.log(data.value);
-      this.dataSource2 = new MatTableDataSource<ChecklistData>(this.currentElementData.filter(item => item.location == data.value));
-    }
-    else if (data.value == 'STAU') {
-      console.log(data.value);
-      this.dataSource2 = new MatTableDataSource<ChecklistData>(this.currentElementData.filter(item => item.location == data.value));
-    }
-    else if (data.value == 'QLD') {
-      console.log(data.value);
-      this.dataSource2 = new MatTableDataSource<ChecklistData>(this.currentElementData.filter(item => item.location == data.value));
-    }
-    else if (data.value == 'WA') {
-      console.log(data.value);
-      this.dataSource2 = new MatTableDataSource<ChecklistData>(this.currentElementData.filter(item => item.location == data.value));
-    }
-    else if (data.value == 'VIC') {
-      console.log(data.value);
-      this.dataSource2 = new MatTableDataSource<ChecklistData>(this.currentElementData.filter(item => item.location == data.value));
+    if (!data.value) {
+      console.log("Clear states filter");
+      this.dataSource = new MatTableDataSource<ChecklistData>(this.currentElementData);
+      this.dataSource.paginator = this.paginator;
+      this.dataSource.sort = this.sort;
+      this.pageSizeOptions[3] = this.currentElementData.length;
     }
     else {
-      console.log(data.value);
-      this.dataSource2 = new MatTableDataSource<ChecklistData>(this.currentElementData);
+      console.log(`States filter: ${data.value}`);
+      var tempArray = this.currentElementData.filter(item => item.state == data.value)
+      this.dataSource = new MatTableDataSource<ChecklistData>(tempArray);
+      this.dataSource.paginator = this.paginator;
+      this.dataSource.sort = this.sort;
+      this.pageSizeOptions[3] = tempArray.length;
     }
   }
 
+  // filter checklist type (daily, weekly, monthly, biannually)
   filterChecklist(data) {
-    console.log(data);
-    if (data.value == 'Daily') {
-      this.periods = DAILY;
-      this.selectedOption = 7;
+    this.periods = data.value.periodOptions;
+    var tempArray = [];
+
+    if (data.value.value == "daily") { // daily checklist handler
+      // tempArray.push(data.value.periodOptions[0]);
+      this.selectedOptionDaily = data.value.periodOptions[0];
+    }
+    else if (data.value.value == "monthly") { // monthly checklist handler
+      tempArray.push(data.value.periodOptions[(LAST_YEARS * 12) + new Date().getMonth()]);
+    }
+    else if (data.value.value == "maintenance") { // biannually checklist handler
+      // tempArray.push(data.value.periodOptions[0]);
+      this.selectedOptionDaily = data.value.periodOptions[0];
+    }
+    this.updateOptionSource(tempArray);
+    this.fetchData();
+  }
+
+  filterOptionList(data) {
+    this.optionSource = new MatTableDataSource<PeriodData>(this.selectedOption);
+    // this.optionSource = new MatTableDataSource<PeriodData>([]);
+    this.optionSource.paginator = this.paginator2;
+  }
+
+  private updateOptionSource(optionList) {
+    this.selectedOption = optionList;
+    this.optionSource = new MatTableDataSource<PeriodData>(this.selectedOption);
+    // this.optionSource = new MatTableDataSource<PeriodData>([]);
+    this.optionSource.paginator = this.paginator2;
+  }
+
+  private updateDataSource(dataList) {
+    this.currentElementData = dataList;
+    var tempArray = [];
+    if (!this.selectedState) {
+      tempArray = this.currentElementData;
     }
     else {
-      this.periods = MONTHLY;
-      this.selectedOption = 3;
+      // this.dataSource = new MatTableDataSource
+      tempArray = this.currentElementData.filter(item => item.state == this.selectedState)
     }
+    this.dataSource = new MatTableDataSource<ChecklistData>(tempArray);
+    this.dataSource.paginator = this.paginator;
+    this.dataSource.sort = this.sort;
+    this.pageSizeOptions[3] = this.currentElementData.length;
+  }
+
+  removeOption(data) {
+    var tempArray = this.selectedOption.filter(function(value, index, arr) {
+      return value.value != data.value;
+    });
+
+    this.updateOptionSource(tempArray);
+  }
+
+  // query data
+  fetchData() {
+    // handle what type of checklist is displayed and must update date range default value
+    var params = [];
+    
+    for (var option of this.selectedOption) {
+      params.push({ from: option.value, to: option.end });
+    }
+
+    console.log(this.selectedChecklist.value);
+
+    this.checklistService.fetchData('vsr', this.selectedChecklist.value, params)
+      .subscribe((data: any) => {
+        console.log(data);
+
+        var result = [];
+        var states = {};
+
+        var arrayData = data.data;
+        for (var item of arrayData) {
+          if (!states[item.stateReg]) {
+            states[item.stateReg] = 1;
+          }
+          else {
+            states[item.stateReg]++;
+          }
+
+          var row = {};
+          if (item.hasOwnProperty("stats")) {
+            row = item.stats;
+          }
+          else {
+            row = {
+              timesChecked: 0,
+              timesCompliant: 0,
+              compliance: 0,
+              timesCritical: 0
+            }
+          }
+          row["vehicle"] = item.rego;
+          row["state"] = item.stateReg;
+          row["address"] = item.branch;
+
+          result.push(row);
+        }
+
+        console.log(states);
+        console.log(Object.keys(states));
+        this.states = Object.keys(states).sort();
+
+        this.updateDataSource(result);
+      });
+  }
+
+  resetPeriodFilter() {
+
+    var data = this.selectedChecklist, tempArray = [];
+
+    if (data.value == "daily") { // daily checklist handler
+      this.selectedOptionDaily = DAILY[0];
+    }
+    else if (data.value == "monthly") { // monthly checklist handler
+      tempArray.push(data.periodOptions[(LAST_YEARS * 12) + new Date().getMonth()]);
+    }
+    else if (data.value == "maintenance") { // biannually checklist handler
+      // tempArray.push(data.periodOptions[data.periodOptions.length - 1]);
+      this.selectedOptionDaily = MAINTENANCE[0];
+    }
+
+    this.updateOptionSource(tempArray);
+    this.fetchData();
   }
 }

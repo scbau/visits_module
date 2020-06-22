@@ -6,7 +6,7 @@ import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { ErrorStateMatcher } from '@angular/material/core';
 
-import { WarehouseService } from '../../services/warehouse/warehouse.service';
+import { ChecklistService } from '../../services/checklist/checklist.service';
 
 import { FormControl, FormGroupDirective, NgForm, Validators } from '@angular/forms';
 
@@ -35,14 +35,67 @@ export interface PeriodData {
 
 const LAST_YEARS = 2;
 
-var DAILY = [
+/*var DAILY = [
   { value: 0, displayValue: 'Today' },
   { value: 1, displayValue: 'Yesterday' },
   { value: 7, displayValue: '7 days' },
   { value: 14, displayValue: '14 days' },
   { value: 30, displayValue: '30 days' },
   // { value: ??, displayValue: 'Custom range' }, // custom range?
-];
+];*/
+const DAILY = (function() {
+  var startDate = new Date(Date.now());
+  startDate.setHours(0, 0, 0, 0);
+  var endDate = new Date(startDate);
+  endDate.setDate(endDate.getDate() + 1);
+  endDate.setMilliseconds(endDate.getMilliseconds() - 1);
+
+  var options = [{
+    value: startDate.toISOString(),
+    end: endDate.toISOString(),
+    displayValue: "Today"
+  }];
+
+  startDate.setDate(startDate.getDate() - 1);
+  endDate = new Date(startDate);
+  endDate.setDate(endDate.getDate() + 1);
+  endDate.setMilliseconds(endDate.getMilliseconds() - 1);
+
+  options.push({
+    value: startDate.toISOString(),
+    end: endDate.toISOString(),
+    displayValue: "Yesterday"
+  });
+
+  startDate = new Date(Date.now());
+  startDate.setHours(0, 0, 0, 0);
+  startDate.setDate(startDate.getDate() - 7);
+  endDate = new Date(startDate);
+  endDate.setDate(endDate.getDate() + 7);
+  endDate.setMilliseconds(endDate.getMilliseconds() - 1);
+
+  options.push({
+    value: startDate.toISOString(),
+    end: endDate.toISOString(),
+    displayValue: "Last 7 days"
+  });
+
+  startDate = new Date(Date.now());
+  startDate.setHours(0, 0, 0, 0);
+  startDate.setDate(startDate.getDate() - 14);
+  endDate = new Date(startDate);
+  endDate.setDate(endDate.getDate() + 14);
+  endDate.setMilliseconds(endDate.getMilliseconds() - 1);
+
+  options.push({
+    value: startDate.toISOString(),
+    end: endDate.toISOString(),
+    displayValue: "Last 14 days"
+  });
+
+  console.log(options);
+  return options;
+})();
 
 var currentWeek = {};
 
@@ -189,7 +242,12 @@ export class WarehouseChecklistComponent implements OnInit, AfterViewInit {
   options = new FormControl('valid', [
     Validators.required,
   ]);
+
+  optionsDaily = new FormControl('valid', [
+    Validators.required,
+  ]);
   matcher = new MyErrorStateMatcher();
+  matcherDaily = new MyErrorStateMatcher();
 
   displayedColumns: string[] = ['state', 'warehouse', 'address', 'timesChecked', 'timesCompliant', 'compliance', 'timesCritical'];
   displayedOptionColumns: string[] = ['period', 'close'];
@@ -201,6 +259,7 @@ export class WarehouseChecklistComponent implements OnInit, AfterViewInit {
 
   // filter values
   public selectedOption = [CHECKLIST_OPTIONS[0].periodOptions[0]];
+  selectedOptionDaily = CHECKLIST_OPTIONS[0].periodOptions[0];
   optionSource = new MatTableDataSource<PeriodData>(this.selectedOption);
   // public selectedPeriod = CHECKLIST_OPTIONS[0].periodOptions[0];
   public selectedState = '';
@@ -217,7 +276,7 @@ export class WarehouseChecklistComponent implements OnInit, AfterViewInit {
   // paginator size options
   pageSizeOptions = [10, 20, 40, 100];
 
-  constructor(private whService: WarehouseService) { }
+  constructor(private whService: ChecklistService) { }
 
   ngAfterViewInit(): void {
     this.fetchData();
@@ -254,7 +313,7 @@ export class WarehouseChecklistComponent implements OnInit, AfterViewInit {
 
     if (data.value.value == "daily") { // daily checklist handler
       // !!!TODO
-      console.log("daily checklist")
+      this.selectedOptionDaily = data.value.periodOptions[0];
     }
     else if (data.value.value == "weekly") { // weekly checklist handler
       tempArray.push(currentWeek);
@@ -313,10 +372,13 @@ export class WarehouseChecklistComponent implements OnInit, AfterViewInit {
         params.push({ from: option.value, to: option.end });
       }
     }
+    else if (this.selectedChecklist.value == 'daily') {
+      params.push({ from: this.selectedOptionDaily.value, to: this.selectedOptionDaily.end });
+    }
 
     console.log(params);
 
-    this.whService.fetchData(this.selectedChecklist.value, params)  
+    this.whService.fetchData('warehouse', this.selectedChecklist.value, params)  
       .subscribe((data: any) => {
         console.log(data);
 
@@ -364,7 +426,8 @@ export class WarehouseChecklistComponent implements OnInit, AfterViewInit {
 
     if (data.value == "daily") { // daily checklist handler
       //
-      console.log("daily checklist")
+      // console.log("daily checklist")
+      this.selectedOptionDaily = DAILY[0];
     }
     else if (data.value == "weekly") { // weekly checklist handler
       tempArray.push(currentWeek);

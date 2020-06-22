@@ -7,6 +7,8 @@ import { ForkliftChecklistComponent } from './modules/checklist/forklift.checkli
 import { VSRChecklistComponent } from './modules/checklist/vsr.checklist.component';
 import { WarehouseChecklistComponent } from './modules/checklist/warehouse.checklist.component';
 
+import { SettingsComponent } from './modules/settings/settings.component';
+
 
 const routes: Routes = [
     {
@@ -37,6 +39,10 @@ const routes: Routes = [
   {
     path: 'dashboard/checksheet/warehouse',
     component: WarehouseChecklistComponent
+  },
+  {
+    path: 'dashboard/settings',
+    component: SettingsComponent
   }
 ];
 

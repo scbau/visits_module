@@ -1,99 +1,169 @@
 
-<div style="padding: 20px;" fxLayout="column" fxFlexLayout="center space-around">
-  <div fxLayout="row" fxFlexLayout="space-around center">
-    <mat-form-field style="width: 33%; margin: 10px;">
-      <mat-label>State</mat-label>
-      <mat-select (selectionChange)="filterState($event)" [(ngModel)]="selectedState">
-        <mat-option value="All" selected>
-          All States
-        </mat-option>
-        <mat-option value="NSW">
-          NSW
-        </mat-option>
-        <mat-option value="QLD">
-          QLD
-        </mat-option>
-        <mat-option value="VIC">
-          VIC
-        </mat-option>
-        <mat-option value="WA">
-          WA
-        </mat-option>
-        <mat-option value="STAU">
-          STAU
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
+<div style="padding: 10px; height: 100%;" fxLayout="row" fxLayoutAlign="space-around stretch">
+  <div fxLayout="column" fxLayoutAlign="start stretch" style="padding: 10px; width: 35%;">
+      <h3><b>Filters</b></h3>
+    <!-- <div> -->
+      <mat-form-field>
+        <mat-label>State</mat-label>
+        <mat-select (selectionChange)="filterState($event)" [(ngModel)]="selectedState">
+          <mat-option value="" selected>
+            All States
+          </mat-option>
+          <mat-option *ngFor="let state of states" [value]="state">
+            {{state}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    <!-- </div> -->
 
-    <mat-form-field style="width: 33%; margin: 10px;">
-      <mat-label>Checklist</mat-label>
-      <mat-select (selectionChange)="filterChecklist($event)" [(ngModel)]="selectedChecklist">
-        <mat-option value="Daily" selected>
-          Daily
-        </mat-option>
-        <mat-option value="Monthly">
-          Monthly
-        </mat-option>
-        <mat-option value="Maintenance">
-          Maintenance
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
+    <!-- <div fxLayout="column" fxLayoutAlign="space-between stretch"> -->
+      <mat-form-field>
+        <mat-label>Checklist</mat-label>
+        <mat-select (selectionChange)="filterChecklist($event)" [(ngModel)]="selectedChecklist">
+          <mat-option *ngFor="let checklist of checklists" [value]="checklist">
+            {{checklist.displayValue}}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+    <!-- </div> -->
+    <div fxLayout="column" fxLayoutAlign="space-between stretch">
+      <h3><b>Period</b></h3>
+      <!-- <mat-list>
+        <mat-list-item *ngFor="let option of selectedOption; let index=index">
+          <h3 matLine> {{option.displayValue}} </h3>
+          <button mat-icon-button (click)="removeOption(index)" type="button">
+            <mat-icon>close</mat-icon>
+          </button>
+        </mat-list-item>
+      </mat-list> -->
 
-    <mat-form-field style="width: 33%; margin: 10px;">
-      <mat-label>Period</mat-label>
-      <mat-select (selectionChange)="filter($event)" [(ngModel)]="selectedOption">
-        <!-- <mat-option value="7" selected>
-          7 days
-        </mat-option>
-        <mat-option value="14">
-          14 days
-        </mat-option>
-        <mat-option value="30">
-          30 days
-        </mat-option> -->
-        <mat-option *ngFor="let period of periods" [value]="period.value">
-          {{period.viewValue}}
-        </mat-option>
-      </mat-select>
-    </mat-form-field>
+      <mat-form-field *ngIf="selectedChecklist.value != 'monthly'">
+        <mat-label>Date Range</mat-label>
+        <mat-select 
+          [formControl]="optionsDaily" 
+          (selectionChange)="filterOptionList($event)" 
+          [(ngModel)]="selectedOptionDaily" 
+          [errorStateMatcher]="matcherDaily">
+          <!-- <mat-option>
+            None
+          </mat-option> -->
+          <mat-option *ngFor="let period of periods" [value]="period">
+          <!-- <mat-option *ngFor="let period of periods" [value]="period" [disabled]="options.value?.length == 1 && options.value?.includes(period)"> -->
+            {{ period.displayValue }}
+          </mat-option>
+        </mat-select>
+        <!-- <mat-hint>Errors appear instantly!</mat-hint> -->
+        <mat-error *ngIf="options.hasError('required')">Must select a date range to display.</mat-error>
+      </mat-form-field>
+
+
+      <mat-form-field *ngIf="selectedChecklist.value == 'monthly'">
+        <mat-label>Date Range</mat-label>
+        <mat-select 
+          [formControl]="options" 
+          (selectionChange)="filterOptionList($event)" 
+          [(ngModel)]="selectedOption" 
+          [errorStateMatcher]="matcher"
+          multiple>
+          <mat-select-trigger>
+            {{options.value ? options.value[0]?.displayValue : ''}}
+            <span *ngIf="options.value?.length > 1">
+              (+{{options.value.length - 1}} {{options.value?.length === 2 ? 'other' : 'others'}})
+            </span>
+          </mat-select-trigger>
+          <!-- <mat-option>
+            None
+          </mat-option> -->
+          <mat-option *ngFor="let period of periods" [value]="period">
+          <!-- <mat-option *ngFor="let period of periods" [value]="period" [disabled]="options.value?.length == 1 && options.value?.includes(period)"> -->
+            {{ period.displayValue }}
+          </mat-option>
+        </mat-select>
+        <!-- <mat-hint>Errors appear instantly!</mat-hint> -->
+        <mat-error *ngIf="options.hasError('required')">Must select a date range to display.</mat-error>
+      </mat-form-field>
+
+      <!-- <mat-form-field> -->
+      <div style="padding-bottom: 17.5px;" fxLayout="row" fxLayoutAlign="end center">
+        <button mat-button color="primary" (click)="resetPeriodFilter()">Reset</button>
+
+        <button 
+          mat-raised-button 
+          color="primary" 
+          style="float: right;"
+          (click)="fetchData()"
+          [disabled]="options.value?.length == 0">
+          Update Table
+        </button>
+      </div>
+      <!-- </mat-form-field> -->
+
+      <table *ngIf="selectedChecklist.value == 'monthly'" mat-table [dataSource]="optionSource" class="mat-elevation-z8" style="width: 100%;">
+
+        <ng-container matColumnDef="period">
+          <th style="width: 90%!important;" mat-header-cell *matHeaderCellDef> Period </th>
+          <td style="width: 90%!important;" mat-cell *matCellDef="let element"> {{element.displayValue}} </td>
+        </ng-container>
+
+        <ng-container matColumnDef="close">
+          <th style="width: 10%!important;" mat-header-cell *matHeaderCellDef>  </th>
+          <td style="width: 10%!important;" mat-cell *matCellDef="let element">
+            <button mat-icon-button (click)="removeOption(element)" type="button">
+              <mat-icon>close</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <!-- <tr mat-header-row *matHeaderRowDef="displayedOptionColumns; sticky: true"></tr> -->
+        <tr mat-row *matRowDef="let row; columns: displayedOptionColumns;"></tr>
+      </table>
+      <mat-paginator *ngIf="selectedChecklist.value == 'monthly'" class="mat-elevation-z8" #paginator2 [pageSizeOptions]="[5, 10, 15]"></mat-paginator>
+    </div>
+    
   </div>
 
-  <h2>{{ selectedChecklist }} VSR Vehicle Checklist Compliance</h2>
-  <table mat-table [dataSource]="dataSource2" class="mat-elevation-z8">
+  <div style="width: 100%; padding: 10px;">
+    <h2>{{ selectedChecklist.displayValue }} VSR Pre-start Checklist Compliance</h2>
+    <table style="width: 100%;" mat-table matSort matSortActive="compliance" matSortDirection="desc" [dataSource]="dataSource" class="mat-elevation-z8">
 
-    <ng-container matColumnDef="location">
-      <th style="width: 15%!important;" mat-header-cell *matHeaderCellDef> Location </th>
-      <td style="width: 15%!important;" mat-cell *matCellDef="let element"> {{element.location}} </td>
-    </ng-container>
+      <ng-container matColumnDef="state">
+        <th style="width: 20%!important;" mat-header-cell *matHeaderCellDef mat-sort-header> State </th>
+        <td style="width: 20%!important;" mat-cell *matCellDef="let element"> {{element.state}} </td>
+      </ng-container>
 
-    <ng-container matColumnDef="forklift">
-      <th style="width: 25%!important;" mat-header-cell *matHeaderCellDef> VSR Vechicle </th>
-      <td style="width: 25%!important;" mat-cell *matCellDef="let element"> {{element.forklift}} </td>
-    </ng-container>
+      <ng-container matColumnDef="vehicle">
+        <th style="width: 15%!important;" mat-header-cell *matHeaderCellDef mat-sort-header> VSR Vehicle </th>
+        <td style="width: 15%!important;" mat-cell *matCellDef="let element"> {{element.vehicle}} </td>
+      </ng-container>
 
-    <ng-container matColumnDef="timesChecked">
-      <th style="width: 15%!important;" mat-header-cell *matHeaderCellDef> Times Checked </th>
-      <td style="width: 15%!important;" mat-cell *matCellDef="let element"> {{element.timesChecked}} </td>
-    </ng-container>
+      <ng-container matColumnDef="address">
+        <th style="width: 25%!important;" mat-header-cell *matHeaderCellDef mat-sort-header> Branch </th>
+        <td style="width: 25%!important;" mat-cell *matCellDef="let element"> {{element.address}} </td>
+      </ng-container>
 
-    <ng-container matColumnDef="timesCompliant">
-      <th style="width: 15%!important;" mat-header-cell *matHeaderCellDef> Times Compliant </th>
-      <td style="width: 15%!important;" mat-cell *matCellDef="let element"> {{element.timesCompliant}} </td>
-    </ng-container>
+      <ng-container matColumnDef="timesChecked">
+        <th style="width: 10%!important;" mat-header-cell *matHeaderCellDef mat-sort-header> Times Checked </th>
+        <td style="width: 10%!important; padding-left: 20px;" mat-cell *matCellDef="let element"> {{element.timesChecked}} </td>
+      </ng-container>
 
-    <ng-container matColumnDef="compliance">
-      <th style="width: 15%!important;" mat-header-cell *matHeaderCellDef> Compliance </th>
-      <td style="width: 15%!important;" mat-cell *matCellDef="let element"> {{element.compliance}} </td>
-    </ng-container>
+      <ng-container matColumnDef="timesCompliant">
+        <th style="width: 12%!important;" mat-header-cell *matHeaderCellDef mat-sort-header> Times Compliant </th>
+        <td style="width: 12%!important; padding-left: 20px;" mat-cell *matCellDef="let element"> {{element.timesCompliant}} </td>
+      </ng-container>
 
-    <ng-container matColumnDef="timesCritical">
-      <th style="width: 15%!important;" mat-header-cell *matHeaderCellDef> Times with Critical </th>
-      <td style="width: 15%!important;" mat-cell *matCellDef="let element"> {{element.timesCritical}} </td>
-    </ng-container>
+      <ng-container matColumnDef="compliance">
+        <th style="width: 8%!important;" mat-header-cell *matHeaderCellDef mat-sort-header="compliance"> Compliance </th>
+        <td style="width: 8%!important; padding-left: 20px;" mat-cell *matCellDef="let element"> {{element.compliance * 100 + "%"}} </td>
+      </ng-container>
 
-    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-  </table>
-  <mat-paginator #paginator2 class="mat-elevation-z8" [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
+      <ng-container matColumnDef="timesCritical">
+        <th style="width: 10%!important;" mat-header-cell *matHeaderCellDef mat-sort-header> Times with Critical </th>
+        <td style="width: 10%!important; padding-left: 20px;" mat-cell *matCellDef="let element"> {{element.timesCritical}} </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+    <mat-paginator class="mat-elevation-z8" #paginator [pageSizeOptions]="[10, 20, 40, dataSource.data.length]" showFirstLastButtons></mat-paginator>
+  </div>
 </div>

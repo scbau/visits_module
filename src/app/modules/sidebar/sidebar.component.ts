@@ -171,6 +171,11 @@ export class SidebarComponent implements OnInit, OnDestroy {
         this.router.navigateByUrl(node.route);
     }
 
+    openSettings(): void {
+      this.navbarText = "Settings";
+      this.router.navigateByUrl('dashboard/settings');
+    }
+
     public setTitle(text: string): void {
         this.navbarText = text;
     }
