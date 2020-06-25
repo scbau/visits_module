@@ -1,11 +1,10 @@
-
 <div style="padding: 10px; height: 100%;" fxLayout="row" fxLayoutAlign="space-around stretch">
   <div fxLayout="column" fxLayoutAlign="start stretch" style="padding: 10px; width: 35%;">
       <h3><b>Filters</b></h3>
     <!-- <div> -->
       <mat-form-field>
         <mat-label>State</mat-label>
-        <mat-select (selectionChange)="filterState($event)" [(ngModel)]="selectedState">
+        <mat-select (selectionChange)="filterState($event)" [disabled]="isLoading" [(ngModel)]="selectedState">
           <mat-option value="" selected>
             All States
           </mat-option>
@@ -19,7 +18,7 @@
     <!-- <div fxLayout="column" fxLayoutAlign="space-between stretch"> -->
       <mat-form-field>
         <mat-label>Checklist</mat-label>
-        <mat-select (selectionChange)="filterChecklist($event)" [(ngModel)]="selectedChecklist">
+        <mat-select (selectionChange)="filterChecklist($event)" [disabled]="isLoading" [(ngModel)]="selectedChecklist">
           <mat-option *ngFor="let checklist of checklists" [value]="checklist">
             {{checklist.displayValue}}
           </mat-option>
@@ -53,7 +52,7 @@
           </mat-option>
         </mat-select>
         <!-- <mat-hint>Errors appear instantly!</mat-hint> -->
-        <mat-error *ngIf="options.hasError('required')">Must select a date range to display.</mat-error>
+        <mat-error *ngIf="optionsDaily.hasError('required')">Must select a date range to display.</mat-error>
       </mat-form-field>
 
 
@@ -85,14 +84,14 @@
 
       <!-- <mat-form-field> -->
       <div style="padding-bottom: 17.5px;" fxLayout="row" fxLayoutAlign="end center">
-        <button mat-button color="primary" (click)="resetPeriodFilter()">Reset</button>
+        <button mat-button color="primary" [disabled]="isLoading" (click)="resetPeriodFilter()">Reset</button>
 
         <button 
           mat-raised-button 
           color="primary" 
           style="float: right;"
           (click)="fetchData()"
-          [disabled]="options.value?.length == 0">
+          [disabled]="isLoading || options.value?.length == 0">
           Update Table
         </button>
       </div>
@@ -123,22 +122,24 @@
   </div>
 
   <div style="width: 100%; padding: 10px;">
-    <h2>{{ selectedChecklist.displayValue }} VSR Pre-start Checklist Compliance</h2>
+    <h2 style="margin-bottom: 8px!important;">{{ selectedChecklist.displayValue }} VSR Pre-start Checklist Compliance</h2>
+    <p *ngIf="expectedCheckCount">(Expected times checked: {{ expectedCheckCount }})</p>
+    <mat-progress-bar mode="indeterminate" *ngIf="isLoading"></mat-progress-bar>
     <table style="width: 100%;" mat-table matSort matSortActive="compliance" matSortDirection="desc" [dataSource]="dataSource" class="mat-elevation-z8">
 
       <ng-container matColumnDef="state">
-        <th style="width: 20%!important;" mat-header-cell *matHeaderCellDef mat-sort-header> State </th>
-        <td style="width: 20%!important;" mat-cell *matCellDef="let element"> {{element.state}} </td>
+        <th style="width: 18%!important;" mat-header-cell *matHeaderCellDef mat-sort-header> State </th>
+        <td style="width: 18%!important;" mat-cell *matCellDef="let element"> {{element.state}} </td>
       </ng-container>
 
       <ng-container matColumnDef="vehicle">
-        <th style="width: 15%!important;" mat-header-cell *matHeaderCellDef mat-sort-header> VSR Vehicle </th>
-        <td style="width: 15%!important;" mat-cell *matCellDef="let element"> {{element.vehicle}} </td>
+        <th style="width: 13%!important;" mat-header-cell *matHeaderCellDef mat-sort-header> VSR Vehicle </th>
+        <td style="width: 13%!important;" mat-cell *matCellDef="let element"> {{element.vehicle}} </td>
       </ng-container>
 
       <ng-container matColumnDef="address">
-        <th style="width: 25%!important;" mat-header-cell *matHeaderCellDef mat-sort-header> Branch </th>
-        <td style="width: 25%!important;" mat-cell *matCellDef="let element"> {{element.address}} </td>
+        <th style="width: 23%!important;" mat-header-cell *matHeaderCellDef mat-sort-header> Branch </th>
+        <td style="width: 23%!important;" mat-cell *matCellDef="let element"> {{element.address}} </td>
       </ng-container>
 
       <ng-container matColumnDef="timesChecked">
@@ -146,14 +147,19 @@
         <td style="width: 10%!important; padding-left: 20px;" mat-cell *matCellDef="let element"> {{element.timesChecked}} </td>
       </ng-container>
 
+      <ng-container matColumnDef="frequencyCompliance">
+        <th style="width: 8%!important;" mat-header-cell *matHeaderCellDef mat-sort-header> Frequency Compliance </th>
+        <td style="width: 8%!important; padding-left: 20px;" mat-cell *matCellDef="let element"> {{element.frequencyCompliance | percent }} </td>
+      </ng-container>
+
       <ng-container matColumnDef="timesCompliant">
-        <th style="width: 12%!important;" mat-header-cell *matHeaderCellDef mat-sort-header> Times Compliant </th>
-        <td style="width: 12%!important; padding-left: 20px;" mat-cell *matCellDef="let element"> {{element.timesCompliant}} </td>
+        <th style="width: 10%!important;" mat-header-cell *matHeaderCellDef mat-sort-header> Times Compliant </th>
+        <td style="width: 10%!important; padding-left: 20px;" mat-cell *matCellDef="let element"> {{element.timesCompliant}} </td>
       </ng-container>
 
       <ng-container matColumnDef="compliance">
-        <th style="width: 8%!important;" mat-header-cell *matHeaderCellDef mat-sort-header="compliance"> Compliance </th>
-        <td style="width: 8%!important; padding-left: 20px;" mat-cell *matCellDef="let element"> {{element.compliance * 100 + "%"}} </td>
+        <th style="width: 8%!important;" mat-header-cell *matHeaderCellDef mat-sort-header="compliance"> Checklist Compliance </th>
+        <td style="width: 8%!important; padding-left: 20px;" mat-cell *matCellDef="let element"> {{element.compliance | percent }} </td>
       </ng-container>
 
       <ng-container matColumnDef="timesCritical">

@@ -26,6 +26,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { HttpModule } from '@angular/http';
 
 import { ChartsModule } from 'ng2-charts';
+// import { OverlayModule } from '@angular/cdk/overlay'
 
 // for local data
 import { InMemoryDataService } from './services/in-memory/in-memory-data.service';
@@ -74,6 +75,7 @@ import { SettingsComponent } from './modules/settings/settings.component';
       InMemoryDataListService, { dataEncapsulation: false }
     ),*/
     MaterialModule,
+    // OverlayModule,
     // MatTableDataSource,
     AppRoutingModule,
     FormsModule, 

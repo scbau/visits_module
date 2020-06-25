@@ -35,17 +35,17 @@ var TREE_DATA: FoodNode[] = [
   },
   {
     "id": 3,
-    "name": "Checksheet Compliance",
+    "name": "Checklist Compliance",
     "route": "/dashboard/checksheet",
     "children": [
       {
         "id": 31,
-        "name": "Forklift Pre-start Checksheet",
+        "name": "Forklift Pre-start Checklist",
         "route": "/dashboard/checksheet/forklift"
       },
       {
         "id": 32,
-        "name": "VSR Pre-start Checksheet",
+        "name": "VSR Pre-start Checklist",
         "route": "/dashboard/checksheet/vsr",
         /*"children": [
           {
@@ -67,7 +67,7 @@ var TREE_DATA: FoodNode[] = [
       }, 
       {
         "id": 33,
-        "name": "Warehouse Depot Checksheet",
+        "name": "Warehouse Depot Checklist",
         "route": "/dashboard/checksheet/warehouse",
         /*"children": [
           {

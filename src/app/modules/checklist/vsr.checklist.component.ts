@@ -7,6 +7,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { ErrorStateMatcher } from '@angular/material/core';
 
 import { ChecklistService } from '../../services/checklist/checklist.service';
+// import { UiService } from '../../services/overlay/ui.service'
 
 import { FormControl, FormGroupDirective, NgForm, Validators } from '@angular/forms';
 
@@ -26,6 +27,8 @@ export interface ChecklistData {
   state: string;
   vehicle: string;
   address: string;
+  frequencyCompliance: number;
+  expectedCheckCount: number;
 }
 
 export interface PeriodData {
@@ -68,7 +71,7 @@ const DAILY = (function() {
   options.push({
     value: startDate.toISOString(),
     end: endDate.toISOString(),
-    displayValue: "Last 7 days"
+    displayValue: "Last 7 days (" + startDate.toLocaleDateString("en-AU") + " to " + endDate.toLocaleDateString("en-AU") + ")"
   });
 
   startDate = new Date(Date.now());
@@ -81,7 +84,20 @@ const DAILY = (function() {
   options.push({
     value: startDate.toISOString(),
     end: endDate.toISOString(),
-    displayValue: "Last 14 days"
+    displayValue: "Last 14 days (" + startDate.toLocaleDateString("en-AU") + " to " + endDate.toLocaleDateString("en-AU") + ")"
+  });
+
+  startDate = new Date(Date.now());
+  startDate.setHours(0, 0, 0, 0);
+  startDate.setDate(startDate.getDate() - 30);
+  endDate = new Date(startDate);
+  endDate.setDate(endDate.getDate() + 30);
+  endDate.setMilliseconds(endDate.getMilliseconds() - 1);
+
+  options.push({
+    value: startDate.toISOString(),
+    end: endDate.toISOString(),
+    displayValue: "Last 30 days (" + startDate.toLocaleDateString("en-AU") + " to " + endDate.toLocaleDateString("en-AU") + ")"
   });
 
   console.log(options);
@@ -152,6 +168,9 @@ const CHECKLIST_OPTIONS = [
 })
 export class VSRChecklistComponent implements OnInit, AfterViewInit {
 
+  expectedCheckCount = 0;
+  isLoading = false;
+
   options = new FormControl('valid', [
     Validators.required,
   ]);
@@ -161,7 +180,7 @@ export class VSRChecklistComponent implements OnInit, AfterViewInit {
   matcher = new MyErrorStateMatcher();
   matcherDaily = new MyErrorStateMatcher();
 
-  displayedColumns: string[] = ['state', 'vehicle', 'address', 'timesChecked', 'timesCompliant', 'compliance', 'timesCritical'];
+  displayedColumns: string[] = ['state', 'vehicle', 'address', 'timesChecked', 'timesCompliant', 'frequencyCompliance', 'compliance', 'timesCritical'];
   displayedOptionColumns: string[] = ['period', 'close'];
   dataSource = new MatTableDataSource<ChecklistData>([]);
 
@@ -188,6 +207,7 @@ export class VSRChecklistComponent implements OnInit, AfterViewInit {
   // paginator size options
   pageSizeOptions = [10, 20, 40, 100];
 
+  // constructor(private checklistService: ChecklistService, private ui: UiService) { }
   constructor(private checklistService: ChecklistService) { }
 
   ngAfterViewInit(): void {
@@ -224,14 +244,12 @@ export class VSRChecklistComponent implements OnInit, AfterViewInit {
     var tempArray = [];
 
     if (data.value.value == "daily") { // daily checklist handler
-      // tempArray.push(data.value.periodOptions[0]);
       this.selectedOptionDaily = data.value.periodOptions[0];
     }
     else if (data.value.value == "monthly") { // monthly checklist handler
       tempArray.push(data.value.periodOptions[(LAST_YEARS * 12) + new Date().getMonth()]);
     }
     else if (data.value.value == "maintenance") { // biannually checklist handler
-      // tempArray.push(data.value.periodOptions[0]);
       this.selectedOptionDaily = data.value.periodOptions[0];
     }
     this.updateOptionSource(tempArray);
@@ -253,6 +271,7 @@ export class VSRChecklistComponent implements OnInit, AfterViewInit {
 
   private updateDataSource(dataList) {
     this.currentElementData = dataList;
+    this.expectedCheckCount = dataList[0].expectedCheckCount;
     var tempArray = [];
     if (!this.selectedState) {
       tempArray = this.currentElementData;
@@ -265,6 +284,9 @@ export class VSRChecklistComponent implements OnInit, AfterViewInit {
     this.dataSource.paginator = this.paginator;
     this.dataSource.sort = this.sort;
     this.pageSizeOptions[3] = this.currentElementData.length;
+    setTimeout(() => {
+      this.isLoading = false;
+    }, 1000);
   }
 
   removeOption(data) {
@@ -278,10 +300,16 @@ export class VSRChecklistComponent implements OnInit, AfterViewInit {
   // query data
   fetchData() {
     // handle what type of checklist is displayed and must update date range default value
+    this.isLoading = true;
     var params = [];
     
-    for (var option of this.selectedOption) {
-      params.push({ from: option.value, to: option.end });
+    if (this.selectedChecklist.value == 'monthly') {
+      for (var option of this.selectedOption) {
+        params.push({ from: option.value, to: option.end });
+      }
+    }
+    else {
+      params.push({ from: this.selectedOptionDaily.value, to: this.selectedOptionDaily.end });
     }
 
     console.log(this.selectedChecklist.value);
@@ -314,6 +342,8 @@ export class VSRChecklistComponent implements OnInit, AfterViewInit {
               timesCritical: 0
             }
           }
+          row["expectedCheckCount"] = item.expectedCheckCount;
+          row["frequencyCompliance"] = row["timesChecked"] / item.expectedCheckCount;
           row["vehicle"] = item.rego;
           row["state"] = item.stateReg;
           row["address"] = item.branch;

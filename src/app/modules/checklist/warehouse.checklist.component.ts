@@ -26,6 +26,8 @@ export interface ChecklistData {
   state: string;
   warehouse: string;
   address: string;
+  frequencyCompliance: number;
+  expectedCheckCount: number;
 }
 
 export interface PeriodData {
@@ -35,14 +37,6 @@ export interface PeriodData {
 
 const LAST_YEARS = 2;
 
-/*var DAILY = [
-  { value: 0, displayValue: 'Today' },
-  { value: 1, displayValue: 'Yesterday' },
-  { value: 7, displayValue: '7 days' },
-  { value: 14, displayValue: '14 days' },
-  { value: 30, displayValue: '30 days' },
-  // { value: ??, displayValue: 'Custom range' }, // custom range?
-];*/
 const DAILY = (function() {
   var startDate = new Date(Date.now());
   startDate.setHours(0, 0, 0, 0);
@@ -77,7 +71,7 @@ const DAILY = (function() {
   options.push({
     value: startDate.toISOString(),
     end: endDate.toISOString(),
-    displayValue: "Last 7 days"
+    displayValue: "Last 7 days (" + startDate.toLocaleDateString("en-AU") + " to " + endDate.toLocaleDateString("en-AU") + ")"
   });
 
   startDate = new Date(Date.now());
@@ -90,7 +84,20 @@ const DAILY = (function() {
   options.push({
     value: startDate.toISOString(),
     end: endDate.toISOString(),
-    displayValue: "Last 14 days"
+    displayValue: "Last 14 days (" + startDate.toLocaleDateString("en-AU") + " to " + endDate.toLocaleDateString("en-AU") + ")"
+  });
+
+  startDate = new Date(Date.now());
+  startDate.setHours(0, 0, 0, 0);
+  startDate.setDate(startDate.getDate() - 30);
+  endDate = new Date(startDate);
+  endDate.setDate(endDate.getDate() + 30);
+  endDate.setMilliseconds(endDate.getMilliseconds() - 1);
+
+  options.push({
+    value: startDate.toISOString(),
+    end: endDate.toISOString(),
+    displayValue: "Last 30 days (" + startDate.toLocaleDateString("en-AU") + " to " + endDate.toLocaleDateString("en-AU") + ")"
   });
 
   console.log(options);
@@ -114,7 +121,7 @@ var WEEKLY = (function() {
     while (startDate.isBefore(today)) {
       let startDateWeek = startDate.isoWeekday('Monday').format('DD-MM-YYYY');
       let startDateISO = startDate.toISOString();
-      // let endDateWeek = startDate.isoWeekday('Sunday').add(7, 'days').format('DD-MM-YYYY');
+      
       let endDateWeek = startDate.isoWeekday('Sunday').format('DD-MM-YYYY');
       let endDateISO = startDate.toISOString();
 
@@ -239,6 +246,9 @@ const CHECKLIST_OPTIONS = [
 })
 export class WarehouseChecklistComponent implements OnInit, AfterViewInit {
 
+  expectedCheckCount = 0;
+  isLoading = false;
+
   options = new FormControl('valid', [
     Validators.required,
   ]);
@@ -249,7 +259,7 @@ export class WarehouseChecklistComponent implements OnInit, AfterViewInit {
   matcher = new MyErrorStateMatcher();
   matcherDaily = new MyErrorStateMatcher();
 
-  displayedColumns: string[] = ['state', 'warehouse', 'address', 'timesChecked', 'timesCompliant', 'compliance', 'timesCritical'];
+  displayedColumns: string[] = ['state', 'warehouse', 'address', 'timesChecked', 'timesCompliant', 'frequencyCompliance', 'compliance', 'timesCritical'];
   displayedOptionColumns: string[] = ['period', 'close'];
   dataSource = new MatTableDataSource<ChecklistData>([]);
 
@@ -312,7 +322,6 @@ export class WarehouseChecklistComponent implements OnInit, AfterViewInit {
     var tempArray = [];
 
     if (data.value.value == "daily") { // daily checklist handler
-      // !!!TODO
       this.selectedOptionDaily = data.value.periodOptions[0];
     }
     else if (data.value.value == "weekly") { // weekly checklist handler
@@ -341,6 +350,7 @@ export class WarehouseChecklistComponent implements OnInit, AfterViewInit {
 
   private updateDataSource(dataList) {
     this.currentElementData = dataList;
+    this.expectedCheckCount = dataList[0].expectedCheckCount;
     var tempArray = [];
     if (!this.selectedState) {
       tempArray = this.currentElementData;
@@ -353,6 +363,9 @@ export class WarehouseChecklistComponent implements OnInit, AfterViewInit {
     this.dataSource.paginator = this.paginator;
     this.dataSource.sort = this.sort;
     this.pageSizeOptions[3] = this.currentElementData.length;
+    setTimeout(() => {
+      this.isLoading = false;
+    }, 1000);
   }
 
   removeOption(data) {
@@ -365,6 +378,7 @@ export class WarehouseChecklistComponent implements OnInit, AfterViewInit {
 
   // query data
   fetchData() {
+    this.isLoading = true;
     // handle what type of checklist is displayed and must update date range default value
     var params = [];
     if (this.selectedChecklist.value != 'daily') {
@@ -406,6 +420,8 @@ export class WarehouseChecklistComponent implements OnInit, AfterViewInit {
               timesCritical: 0
             }
           }
+          row["expectedCheckCount"] = item.expectedCheckCount;
+          row["frequencyCompliance"] = row["timesChecked"] / item.expectedCheckCount;
           row["warehouse"] = item.site;
           row["state"] = item.state;
           row["address"] = item.address;
@@ -421,12 +437,9 @@ export class WarehouseChecklistComponent implements OnInit, AfterViewInit {
   }
 
   resetPeriodFilter() {
-
     var data = this.selectedChecklist, tempArray = [];
 
     if (data.value == "daily") { // daily checklist handler
-      //
-      // console.log("daily checklist")
       this.selectedOptionDaily = DAILY[0];
     }
     else if (data.value == "weekly") { // weekly checklist handler

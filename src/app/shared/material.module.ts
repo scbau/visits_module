@@ -11,6 +11,8 @@ import { MatTableModule } from '@angular/material/table';
 // import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+
 
 @NgModule({
   exports: [
@@ -25,7 +27,8 @@ import { MatSortModule } from '@angular/material/sort';
     MatTableModule,
     // MatTableDataSource,
     MatPaginatorModule,
-    MatSortModule
+    MatSortModule,
+    MatProgressBarModule
   ]
 })
 export class MaterialModule {}
