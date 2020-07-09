@@ -74,6 +74,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   };
 
   public selectedOption = ["20-04-2020"];
+  
 
   public barChartLabels: Label[] = ['NSW'];
   public barChartLabels2: Label[] = [];
@@ -109,8 +110,10 @@ export class DashboardComponent implements OnInit, AfterViewInit {
       var fromDate = moment(new Date(dateString[2], dateString[1]-1, dateString[0]));
       var toDate = moment(fromDate).add(13, 'days');
 
-      console.log(fromDate.format('DD-MM-YYYY'));
-      console.log(toDate.format('DD-MM-YYYY'));
+      // console.log(fromDate.format('DD-MM-YYYY'));
+      console.log(fromDate.toISOString());
+      console.log(toDate.toISOString());
+      // console.log(toDate.format('DD-MM-YYYY'));
 
       this.visitService.fetchAchievement(fromDate.toISOString(), toDate.toISOString())
         .subscribe((data: any) => {

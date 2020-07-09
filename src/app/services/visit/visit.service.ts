@@ -29,4 +29,8 @@ export class VisitService {
   fetchLastVisited(): Observable<Object> {
     return this.http.get('http://localhost:8080/api/accounts/lastVisited');
   }
+
+  uploadPlan(data: FormData): Observable<Object> {
+    return this.http.post('http://localhost:8080/api/tripplan/upload', data);
+  }
 }

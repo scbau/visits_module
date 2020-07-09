@@ -2,6 +2,7 @@ import { Component, OnInit, ViewChild } from '@angular/core';
 import * as moment from 'moment';
 
 import { MatPaginator } from '@angular/material/paginator';
+import { MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { VisitService } from '../../services/visit/visit.service'
 
@@ -27,6 +28,8 @@ export class NotVisitedComponent implements OnInit {
   @ViewChild('paginator1') paginator1: MatPaginator;
   @ViewChild('paginator2') paginator2: MatPaginator;
   @ViewChild('paginator3') paginator3: MatPaginator;
+
+  @ViewChild(MatSort, { static: true }) sort: MatSort;
 
   constructor(private visitService: VisitService) { }
 

@@ -63,7 +63,7 @@
 
 <div style="padding: 20px;" fxLayout="column" fxFlexLayout="center space-around">
   <h2>> 30 Days</h2>
-  <table mat-table [dataSource]="dataSource3" class="mat-elevation-z8">
+  <table mat-table matSort matSortActive="account" [dataSource]="dataSource3" class="mat-elevation-z8">
 
     <ng-container matColumnDef="position">
       <th style="width: 10%!important;" mat-header-cell *matHeaderCellDef> No. </th>
@@ -71,7 +71,7 @@
     </ng-container>
 
     <ng-container matColumnDef="account">
-      <th style="width: 40%!important;" mat-header-cell *matHeaderCellDef> Account </th>
+      <th style="width: 40%!important;" mat-header-cell *matHeaderCellDef mat-sort-header="account"> Account </th>
       <td style="width: 40%!important;" mat-cell *matCellDef="let element"> {{element.account}} </td>
     </ng-container>
 
@@ -88,5 +88,5 @@
     <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
     <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
   </table>
-  <mat-paginator #paginator3 class="mat-elevation-z8" [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
+  <mat-paginator #paginator3 class="mat-elevation-z8" [pageSizeOptions]="[5, 10, 20, dataSource3.data.length]" showFirstLastButtons></mat-paginator>
 </div>
