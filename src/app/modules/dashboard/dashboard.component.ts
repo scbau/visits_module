@@ -119,37 +119,23 @@ export class DashboardComponent implements OnInit, AfterViewInit {
         .subscribe((data: any) => {
           console.log(data);
 
-          var arrayData = data;
-          var totalAchievement = arrayData.reduce(function(total, current) {
-            total.visit += current.visitCount;
-            total.plan += current.total;
-            return total;
-          }, { visit: 0, plan: 0 });
+          var arrayData = data.data;
 
-          console.log(totalAchievement);
+          var dataHolder = [];
+          var totalAchievement = { visit: 0, plan: 0 };
 
+          for (var item in arrayData) {
+            dataHolder.push(((arrayData[item].totalVisit / arrayData[item].totalExpected) * 100).toFixed(0));
+
+            totalAchievement.visit += arrayData[item].totalVisit;
+            totalAchievement.plan += arrayData[item].totalExpected;
+
+            this.barChartLabels2.push(item);
+          }
+          
           this.totalAchievement = totalAchievement.visit / totalAchievement.plan;
           var convert = ((totalAchievement.visit / totalAchievement.plan) * 100).toFixed(0);
           this.barChartData[0].data.push(parseInt(convert));
-
-
-          var perSloc = data.reduce(function(total, current) {
-            if (!total[current["sloc"]]) {
-              total[current["sloc"]] = { visit: 0, plan: 0 };
-            }
-            total[current["sloc"]].visit += current.visitCount;
-            total[current["sloc"]].plan += current.total;
-            return total;
-          }, {})
-
-          console.log(perSloc);
-
-          var dataHolder = [];
-
-          for (var item in perSloc) {
-            dataHolder.push(((perSloc[item].visit / perSloc[item].plan) * 100).toFixed(0));
-            this.barChartLabels2.push(item);
-          }
 
           this.barChartData2.push({
             data: dataHolder,
