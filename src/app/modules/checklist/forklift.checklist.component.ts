@@ -82,7 +82,7 @@ const DAILY = (function() {
 })();
 
 
-const ELEMENT_DATA: ChecklistData[] = [
+/*const ELEMENT_DATA: ChecklistData[] = [
   { timesChecked: 7, forklift: 'Forklift 1', location: 'NSW', timesCompliant: 5, compliance: "71%", timesCritical: 0 },
   { timesChecked: 6, forklift: 'Forklift 2', location: 'NSW', timesCompliant: 6, compliance: "100%", timesCritical: 1 },
   { timesChecked: 3, forklift: 'Forklift 1', location: 'SA', timesCompliant: 1, compliance: "33%", timesCritical: 1 },
@@ -123,7 +123,7 @@ const ELEMENT_DATA3: ChecklistData[] = [
   { timesChecked: 30, forklift: 'Forklift 1', location: 'VIC', timesCompliant: 23, compliance: "77%", timesCritical: 4 },
   { timesChecked: 12, forklift: 'Forklift 2', location: 'VIC', timesCompliant: 10, compliance: "83%", timesCritical: 0 },
   // { timesChecked: 20, location: 'Hydrogen', timesCompliant: 15, compliance: "75%", timesCritical: 2 },
-];
+];*/
 
 @Component({
   selector: 'app-dashboard',
@@ -143,9 +143,9 @@ export class ForkliftChecklistComponent implements OnInit {
   periods = DAILY;
 
   // displayedColumns: string[] = ['location', 'forklift', 'timesChecked', 'timesCompliant', 'compliance', 'timesCritical'];
-  displayedColumns: string[] = ['state', 'forklift', 'address', 'timesChecked', 'timesCompliant', 'compliance', 'timesCritical'];
+  displayedColumns: string[] = ['state', 'forkliftName', 'branch', 'address', 'timesChecked', 'timesCompliant', 'compliance', 'timesCritical'];
 
-  dataSource = new MatTableDataSource<ChecklistData>(ELEMENT_DATA);
+  dataSource = new MatTableDataSource<ChecklistData>([]);
   // dataSource2 = new MatTableDataSource<ChecklistData>(ELEMENT_DATA_VSR);
 
   @ViewChild('paginator') paginator: MatPaginator;
@@ -160,7 +160,7 @@ export class ForkliftChecklistComponent implements OnInit {
 
   public selectedState = '';
 
-  currentElementData = ELEMENT_DATA;
+  currentElementData = [];
   // currentElementData = [];
 
   states = ["ACT", "NSW", "NZ", "NT", "QLD", "SA", "TAS", "VIC", "WA"];
@@ -170,7 +170,7 @@ export class ForkliftChecklistComponent implements OnInit {
   constructor(private checklistService: ChecklistService) { }
 
   ngAfterViewInit(): void {
-    // this.fetchData();
+    this.fetchData();
   }
 
   ngOnInit(): void {
@@ -185,32 +185,32 @@ export class ForkliftChecklistComponent implements OnInit {
     console.log(this.selectedState);
     if (data.value.displayValue == "Today") {
       console.log(data.value);
-      this.currentElementData = ELEMENT_DATA;
+      // this.currentElementData = ELEMENT_DATA;
       if (this.selectedState != "") {
-        this.dataSource = new MatTableDataSource<ChecklistData>(ELEMENT_DATA.filter(item => item.location == this.selectedState));
+        this.dataSource = new MatTableDataSource<ChecklistData>(this.currentElementData.filter(item => item.location == this.selectedState));
       }
       else {
-        this.dataSource = new MatTableDataSource<ChecklistData>(ELEMENT_DATA);
+        this.dataSource = new MatTableDataSource<ChecklistData>(this.currentElementData);
       }
     }
     else if (data.value.displayValue == "Last 7 days") {
       console.log(data.value);
-      this.currentElementData = ELEMENT_DATA2;
+      this.currentElementData = this.currentElementData;
       if (this.selectedState != "") {
-        this.dataSource = new MatTableDataSource<ChecklistData>(ELEMENT_DATA2.filter(item => item.location == this.selectedState));
+        this.dataSource = new MatTableDataSource<ChecklistData>(this.currentElementData.filter(item => item.location == this.selectedState));
       }
       else {
-        this.dataSource = new MatTableDataSource<ChecklistData>(ELEMENT_DATA2);
+        this.dataSource = new MatTableDataSource<ChecklistData>(this.currentElementData);
       }
     }
     else if (data.value.displayValue == "Last 14 days") {
       console.log(data.value);
-      this.currentElementData = ELEMENT_DATA3;
+      this.currentElementData = this.currentElementData;
       if (this.selectedState != "") {
-        this.dataSource = new MatTableDataSource<ChecklistData>(ELEMENT_DATA3.filter(item => item.location == this.selectedState));
+        this.dataSource = new MatTableDataSource<ChecklistData>(this.currentElementData.filter(item => item.location == this.selectedState));
       }
       else {
-        this.dataSource = new MatTableDataSource<ChecklistData>(ELEMENT_DATA3);
+        this.dataSource = new MatTableDataSource<ChecklistData>(this.currentElementData);
       }
     }
   }
@@ -363,11 +363,11 @@ export class ForkliftChecklistComponent implements OnInit {
 
         var arrayData = data.data;
         for (var item of arrayData) {
-          if (!states[item.stateReg]) {
-            states[item.stateReg] = 1;
+          if (!states[item.state]) {
+            states[item.state] = 1;
           }
           else {
-            states[item.stateReg]++;
+            states[item.state]++;
           }
 
           var row = {};
@@ -382,9 +382,10 @@ export class ForkliftChecklistComponent implements OnInit {
               timesCritical: 0
             }
           }
-          row["vehicle"] = item.rego;
-          row["state"] = item.stateReg;
-          row["address"] = item.branch;
+          row["forkliftName"] = item.forkliftName;
+          row["state"] = item.state;
+          row["address"] = item.address;
+          row["branch"] = item.branch;
 
           result.push(row);
         }

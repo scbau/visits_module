@@ -22,10 +22,12 @@ import { MaterialModule } from './shared/material.module';
 // import { MatTableDataSource } from '@angular/material/table';
 import { FlexLayoutModule } from '@angular/flex-layout';
 
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClientModule, HTTP_INTERCEPTORS } from '@angular/common/http';
 import { HttpModule } from '@angular/http';
 
 import { ChartsModule } from 'ng2-charts';
+
+
 // import { OverlayModule } from '@angular/cdk/overlay'
 
 // for local data
@@ -46,6 +48,12 @@ import { VSRChecklistComponent } from './modules/checklist/vsr.checklist.compone
 import { ForkliftChecklistComponent } from './modules/checklist/forklift.checklist.component';
 import { WarehouseChecklistComponent } from './modules/checklist/warehouse.checklist.component';
 import { SettingsComponent } from './modules/settings/settings.component';
+import { UploadComponent } from './modules/settings/upload.component';
+import { LoginComponent } from './modules/login/login.component';
+
+import { JwtInterceptor } from './modules/_helpers/jwt.interceptor';
+import { ErrorInterceptor } from './modules/_helpers/error.interceptor';
+
 
 
 @NgModule({
@@ -61,7 +69,9 @@ import { SettingsComponent } from './modules/settings/settings.component';
     WarehouseChecklistComponent,
     ForkliftChecklistComponent,
     VSRChecklistComponent,
-    SettingsComponent
+    SettingsComponent,
+    UploadComponent,
+    LoginComponent
   ],
   imports: [
     BrowserModule,
@@ -84,14 +94,19 @@ import { SettingsComponent } from './modules/settings/settings.component';
     ServiceWorkerModule.register('ngsw-worker.js', { enabled: environment.production }),
     BrowserAnimationsModule
   ],
+  // entryComponents: [SettingsComponent],
   providers: [ 
     VisitService,
-    ChecklistService, {
-    provide: APP_INITIALIZER,
-    useFactory: (persistenceService: PersistenceService) => () => persistenceService.connect(),
-    deps: [PersistenceService],
-    multi: true
-  }],
+    ChecklistService,
+    {
+      provide: APP_INITIALIZER,
+      useFactory: (persistenceService: PersistenceService) => () => persistenceService.connect(),
+      deps: [PersistenceService],
+      multi: true
+    },
+    { provide: HTTP_INTERCEPTORS, useClass: JwtInterceptor, multi: true },
+    { provide: HTTP_INTERCEPTORS, useClass: ErrorInterceptor, multi: true },
+    ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

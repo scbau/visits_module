@@ -49,28 +49,53 @@
         </mat-select>
         <mat-error *ngIf="optionsDaily.hasError('required')">Must select a date range to display.</mat-error>
       </mat-form-field>
+
+      <div style="padding-bottom: 17.5px;" fxLayout="row" fxLayoutAlign="end center">
+        <button 
+          mat-raised-button 
+          color="primary" 
+          style="float: right;"
+          (click)="fetchData()"
+          >
+          Update Table
+        </button>
+        <!-- <button 
+          mat-raised-button 
+          color="primary" 
+          style="float: right;"
+          (click)="fetchData()"
+          [disabled]="isLoading || options.value?.length == 0">
+          Update Table
+        </button> -->
+      </div>
     </div>
     
   </div>
 
   <div style="width: 100%; padding: 10px;">
     <h2>Daily Forklift Pre-start Checklist Compliance</h2>
+    <!-- <p *ngIf="expectedCheckCount">(Expected times checked: {{ expectedCheckCount }})</p> -->
     <mat-progress-bar mode="indeterminate" *ngIf="isLoading"></mat-progress-bar>
     <table style="width: 100%;" mat-table matSort matSortActive="compliance" matSortDirection="desc" [dataSource]="dataSource" class="mat-elevation-z8">
 
       <ng-container matColumnDef="state">
-        <th style="width: 20%!important;" mat-header-cell *matHeaderCellDef mat-sort-header> State </th>
-        <td style="width: 20%!important;" mat-cell *matCellDef="let element"> {{element.location}} </td>
+        <th style="width: 10%!important;" mat-header-cell *matHeaderCellDef mat-sort-header> State </th>
+        <td style="width: 10%!important;" mat-cell *matCellDef="let element"> {{element.state}} </td>
       </ng-container>
 
-      <ng-container matColumnDef="forklift">
-        <th style="width: 15%!important;" mat-header-cell *matHeaderCellDef mat-sort-header> Forklift </th>
-        <td style="width: 15%!important;" mat-cell *matCellDef="let element"> {{element.forklift}} </td>
+      <ng-container matColumnDef="forkliftName">
+        <th style="width: 15%!important;" mat-header-cell *matHeaderCellDef mat-sort-header> Forklift Name </th>
+        <td style="width: 15%!important;" mat-cell *matCellDef="let element"> {{element.forkliftName}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="branch">
+        <th style="width: 15%!important;" mat-header-cell *matHeaderCellDef mat-sort-header> Branch </th>
+        <td style="width: 15%!important;" mat-cell *matCellDef="let element"> {{element.branch}} </td>
       </ng-container>
 
       <ng-container matColumnDef="address">
-        <th style="width: 25%!important;" mat-header-cell *matHeaderCellDef mat-sort-header> Branch </th>
-        <td style="width: 25%!important;" mat-cell *matCellDef="let element"> {{element.address}} </td>
+        <th style="width: 20%!important;" mat-header-cell *matHeaderCellDef mat-sort-header> Address </th>
+        <td style="width: 20%!important;" mat-cell *matCellDef="let element"> {{element.address}} </td>
       </ng-container>
 
       <ng-container matColumnDef="timesChecked">
@@ -85,7 +110,7 @@
 
       <ng-container matColumnDef="compliance">
         <th style="width: 8%!important;" mat-header-cell *matHeaderCellDef mat-sort-header="compliance"> Compliance </th>
-        <td style="width: 8%!important; padding-left: 20px;" mat-cell *matCellDef="let element"> {{element.compliance}} </td>
+        <td style="width: 8%!important; padding-left: 20px;" mat-cell *matCellDef="let element"> {{element.compliance | percent}} </td>
       </ng-container>
 
       <ng-container matColumnDef="timesCritical">

@@ -152,12 +152,12 @@ const CHECKLIST_OPTIONS = [
     periodOptions: MONTHLY,
     dateUnit: 30
   },
-  {
+  /*{
     value: 'maintenance',
     displayValue: 'Maintenance',
     periodOptions: MAINTENANCE,
     dateUnit: 1
-  }
+  }*/
 ]
 
 

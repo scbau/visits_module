@@ -401,6 +401,12 @@ export class WarehouseChecklistComponent implements OnInit, AfterViewInit {
 
         var arrayData = data.data;
         for (var item of arrayData) {
+          console.log(item);
+
+          if (!item.active) {
+            continue;
+          }
+
           if (!states[item.state]) {
             states[item.state] = 1;
           }

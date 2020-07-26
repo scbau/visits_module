@@ -9,6 +9,11 @@ import * as moment from 'moment';
 import { VisitService } from '../../services/visit/visit.service'
 
 
+import { first } from 'rxjs/operators';
+import { User } from '../../models/user';
+import { AuthenticationService } from '../../services/auth/auth.service';
+import { UserService } from '../../services/auth/user.service';
+
 /*interface TestData {
   visitCount?: number,
   total?: number,
@@ -22,6 +27,10 @@ import { VisitService } from '../../services/visit/visit.service'
   styleUrls: ['./dashboard.component.css']
 })
 export class DashboardComponent implements OnInit, AfterViewInit {
+
+  loading = false;
+
+  users: User[];
 
   data;
   visits$;
@@ -93,7 +102,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
 
   public barChartData2: ChartDataSets[] = [];
 
-  constructor(private visitService: VisitService) { }
+  constructor(private visitService: VisitService, private userService: UserService) { }
 
   fetchVisit() {
     this.barChartLabels2 = [];
@@ -147,6 +156,13 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
+
+    this.loading = true;
+    this.userService.getAll().pipe(first()).subscribe(users => {
+      this.loading = false;
+      this.users = users;
+    });
+
     this.selectedRange = new FormControl();
 
     var startDate = moment(new Date(2020, 0, 1));
