@@ -2,6 +2,8 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { HttpClient, HttpParams } from '@angular/common/http';
 
+import { environment } from '../../../environments/environment';
+
 @Injectable()
 export class ChecklistService {
 
@@ -33,6 +35,6 @@ export class ChecklistService {
       /*.set("from", fromDate)
       .set("to", toDate);*/
     console.log(params.toString());
-    return this.http.get(`http://localhost:8080/api/${checklist}/${table}/compute`, { params: params })
+    return this.http.get(`${environment.apiUrl}/api/${checklist}/${table}/compute`, { params: params })
   }
 }

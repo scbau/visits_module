@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
 
+import { environment } from '../../environments/environment';
+
 const CONFIG = {
   apiTestUrl: 'http://localhost:8080/',
   apiHerokuUrl: 'https://visits-backend.herokuapp.com/',

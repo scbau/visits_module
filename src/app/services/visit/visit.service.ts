@@ -1,6 +1,9 @@
 import { Injectable } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
 import { HttpClient, HttpParams } from '@angular/common/http';
+
+import { environment } from '../../../environments/environment';
+
 import {
   HttpRequest,
   HttpEventType,
@@ -18,7 +21,7 @@ export class VisitService {
     let params = new HttpParams()
       .set("from", fromDate)
       .set("to", toDate);
-    return this.http.get('http://localhost:8080/api/visits', { params: params })
+    return this.http.get('${environment.apiUrl}/api/visits', { params: params })
     // return this.http.get('https://visits-backend.herokuapp.com/api/visits')
   }
 
@@ -28,15 +31,15 @@ export class VisitService {
     let params = new HttpParams()
       .set("from", fromDate)
       .set("to", toDate);
-    return this.http.get('http://localhost:8080/api/visits/compute', { params: params })
+    return this.http.get('${environment.apiUrl}/api/visits/compute', { params: params })
   }
 
   fetchLastVisited(): Observable<Object> {
-    return this.http.get('http://localhost:8080/api/accounts/lastVisited');
+    return this.http.get('${environment.apiUrl}/api/accounts/lastVisited');
   }
 
   uploadPlan(data: FormData): Observable<Object> {
-    return this.http.post('http://localhost:8080/api/tripplan/upload', data);
+    return this.http.post('${environment.apiUrl}/api/tripplan/upload', data);
   }
 
   public upload(files: Set<File>): { [key: string]: { progress: Observable<number> } } {
@@ -51,7 +54,7 @@ export class VisitService {
 
       // create a http-post request and pass the form
       // tell it to report the upload progress
-      const req = new HttpRequest('POST', 'http://localhost:8080/api/visitplan/upload', formData, {
+      const req = new HttpRequest('POST', '${environment.apiUrl}/api/visitplan/upload', formData, {
         reportProgress: true
       });
 
@@ -89,6 +92,6 @@ export class VisitService {
 
   // *** for testing purpose, can delete after ***
   getAccounts(): Observable<Object> {
-    return this.http.get('http://localhost:8080/api/accounts');
+    return this.http.get('${environment.apiUrl}/api/accounts');
   }
 }
