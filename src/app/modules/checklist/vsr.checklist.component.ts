@@ -323,6 +323,12 @@ export class VSRChecklistComponent implements OnInit, AfterViewInit {
 
         var arrayData = data.data;
         for (var item of arrayData) {
+
+          if (!item.enable) {
+            console.log("skipping");
+            continue;
+          }
+          
           if (!states[item.stateReg]) {
             states[item.stateReg] = 1;
           }

@@ -187,7 +187,7 @@ export class ForkliftChecklistComponent implements OnInit {
       console.log(data.value);
       // this.currentElementData = ELEMENT_DATA;
       if (this.selectedState != "") {
-        this.dataSource = new MatTableDataSource<ChecklistData>(this.currentElementData.filter(item => item.location == this.selectedState));
+        this.dataSource = new MatTableDataSource<ChecklistData>(this.currentElementData.filter(item => item.state == this.selectedState));
       }
       else {
         this.dataSource = new MatTableDataSource<ChecklistData>(this.currentElementData);
@@ -197,7 +197,7 @@ export class ForkliftChecklistComponent implements OnInit {
       console.log(data.value);
       this.currentElementData = this.currentElementData;
       if (this.selectedState != "") {
-        this.dataSource = new MatTableDataSource<ChecklistData>(this.currentElementData.filter(item => item.location == this.selectedState));
+        this.dataSource = new MatTableDataSource<ChecklistData>(this.currentElementData.filter(item => item.state == this.selectedState));
       }
       else {
         this.dataSource = new MatTableDataSource<ChecklistData>(this.currentElementData);
@@ -207,7 +207,7 @@ export class ForkliftChecklistComponent implements OnInit {
       console.log(data.value);
       this.currentElementData = this.currentElementData;
       if (this.selectedState != "") {
-        this.dataSource = new MatTableDataSource<ChecklistData>(this.currentElementData.filter(item => item.location == this.selectedState));
+        this.dataSource = new MatTableDataSource<ChecklistData>(this.currentElementData.filter(item => item.state == this.selectedState));
       }
       else {
         this.dataSource = new MatTableDataSource<ChecklistData>(this.currentElementData);
@@ -308,10 +308,11 @@ export class ForkliftChecklistComponent implements OnInit {
       this.dataSource.paginator = this.paginator;
       this.dataSource.sort = this.sort;
       this.pageSizeOptions[3] = this.currentElementData.length;
+      console.log(this.currentElementData);
     }
     else {
       console.log(`States filter: ${data.value}`);
-      var tempArray = this.currentElementData.filter(item => item.location == data.value)
+      var tempArray = this.currentElementData.filter(item => item.state == data.value)
       this.dataSource = new MatTableDataSource<ChecklistData>(tempArray);
       this.dataSource.paginator = this.paginator;
       this.dataSource.sort = this.sort;
@@ -327,7 +328,7 @@ export class ForkliftChecklistComponent implements OnInit {
     }
     else {
       // this.dataSource = new MatTableDataSource
-      tempArray = this.currentElementData.filter(item => item.location == this.selectedState)
+      tempArray = this.currentElementData.filter(item => item.state == this.selectedState)
     }
     this.dataSource = new MatTableDataSource<ChecklistData>(tempArray);
     this.dataSource.paginator = this.paginator;
