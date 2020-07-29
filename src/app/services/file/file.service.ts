@@ -11,7 +11,7 @@ export class FileService {
     constructor(private http: Http) { }
 
     downloadFile(): Observable<any> {
-      return this.http.get('${environment.apiUrl}/employees/download', { responseType: ResponseContentType.Blob });
+      return this.http.get(`${environment.apiUrl}/employees/download`, { responseType: ResponseContentType.Blob });
     }
 
 }
