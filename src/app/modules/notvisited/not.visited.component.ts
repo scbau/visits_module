@@ -20,6 +20,8 @@ export interface LastVisitData {
 })
 export class NotVisitedComponent implements OnInit {
 
+  loading = false;
+
   displayedColumns: string[] = ['position', 'account', 'lastVisit', 'lastVisitInDays'];
   dataSource = new MatTableDataSource<LastVisitData>();
   dataSource3 = new MatTableDataSource<LastVisitData>(); 
@@ -41,9 +43,12 @@ export class NotVisitedComponent implements OnInit {
     this.dataSource.paginator = this.paginator1;
     this.dataSource2.paginator = this.paginator2;
     this.dataSource3.paginator = this.paginator3;
+
+    this.loading = false;
   }
 
   ngOnInit(): void {
+    this.loading = true;
     // this.dataSource.paginator = this.paginator;
     this.dataSource.paginator = this.paginator1;
     this.dataSource2.paginator = this.paginator2;

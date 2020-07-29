@@ -105,6 +105,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
   constructor(private visitService: VisitService, private userService: UserService) { }
 
   fetchVisit() {
+    this.loading = true;
     this.barChartLabels2 = [];
     this.barChartData2 = [];
     this.barChartData = [
@@ -132,6 +133,7 @@ export class DashboardComponent implements OnInit, AfterViewInit {
 
           var dataHolder = [];
           var totalAchievement = { visit: 0, plan: 0 };
+          this.loading = false;
 
           for (var item in arrayData) {
             dataHolder.push(((arrayData[item].totalVisit / arrayData[item].totalExpected) * 100).toFixed(0));
@@ -151,15 +153,16 @@ export class DashboardComponent implements OnInit, AfterViewInit {
             label: "Achievement",
             backgroundColor: "rgba(142,196,65,1)"
           });
+
         });
     }
   }
 
   ngOnInit(): void {
 
-    this.loading = true;
+    // this.loading = true;
     this.userService.getAll().pipe(first()).subscribe(users => {
-      this.loading = false;
+      
       this.users = users;
     });
 

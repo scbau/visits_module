@@ -75,7 +75,7 @@
   <div style="width: 100%; padding: 10px;">
     <h2>Daily Forklift Pre-start Checklist Compliance</h2>
     <!-- <p *ngIf="expectedCheckCount">(Expected times checked: {{ expectedCheckCount }})</p> -->
-    <mat-progress-bar mode="indeterminate" *ngIf="isLoading"></mat-progress-bar>
+    <mat-progress-bar mode="indeterminate" color="accent" *ngIf="isLoading"></mat-progress-bar>
     <table style="width: 100%;" mat-table matSort matSortActive="compliance" matSortDirection="desc" [dataSource]="dataSource" class="mat-elevation-z8">
 
       <ng-container matColumnDef="state">
