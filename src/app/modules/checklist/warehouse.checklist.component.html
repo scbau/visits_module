@@ -127,7 +127,7 @@
   </div>
 
   <div style="width: 100%; padding: 10px;">
-    <h2>{{ selectedChecklist.displayValue }} Warehouse Depot Checklist Compliance</h2>
+    <h2>{{ selectedChecklist.displayValue }} Warehouse Depot Checklist Compliance ({{selectedOptionDaily.dateView}})</h2>
     <p *ngIf="expectedCheckCount">(Expected times checked: {{ expectedCheckCount }})</p>
     <mat-progress-bar mode="indeterminate" color="accent" *ngIf="isLoading"></mat-progress-bar>
     <table style="width: 100%;" mat-table matSort matSortActive="compliance" matSortDirection="desc" [dataSource]="dataSource" class="mat-elevation-z8">

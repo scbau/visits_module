@@ -122,7 +122,7 @@
   </div>
 
   <div style="width: 100%; padding: 10px;">
-    <h2 style="margin-bottom: 8px!important;">{{ selectedChecklist.displayValue }} VSR Pre-start Checklist Compliance</h2>
+    <h2 style="margin-bottom: 8px!important;">{{ selectedChecklist.displayValue }} VSR Pre-start Checklist Compliance ({{selectedOptionDaily.dateView}})</h2>
     <p *ngIf="expectedCheckCount">(Expected times checked: {{ expectedCheckCount }})</p>
     <mat-progress-bar mode="indeterminate" color="accent" *ngIf="isLoading"></mat-progress-bar>
     <table style="width: 100%;" mat-table matSort matSortActive="compliance" matSortDirection="desc" [dataSource]="dataSource" class="mat-elevation-z8">
@@ -138,7 +138,7 @@
       </ng-container>
 
       <ng-container matColumnDef="address">
-        <th style="width: 23%!important;" mat-header-cell *matHeaderCellDef mat-sort-header> Branch </th>
+        <th style="width: 23%!important;" mat-header-cell *matHeaderCellDef mat-sort-header> User </th>
         <td style="width: 23%!important;" mat-cell *matCellDef="let element"> {{element.address}} </td>
       </ng-container>
 

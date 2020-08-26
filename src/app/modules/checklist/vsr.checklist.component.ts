@@ -47,7 +47,8 @@ const DAILY = (function() {
   var options = [{
     value: startDate.toISOString(),
     end: endDate.toISOString(),
-    displayValue: "Today"
+    displayValue: "Today",
+    dateView: startDate.toLocaleDateString("en-AU")
   }];
 
   startDate.setDate(startDate.getDate() - 1);
@@ -58,10 +59,40 @@ const DAILY = (function() {
   options.push({
     value: startDate.toISOString(),
     end: endDate.toISOString(),
-    displayValue: "Yesterday"
+    displayValue: "Yesterday",
+    dateView: startDate.toLocaleDateString("en-AU")
   });
 
   startDate = new Date(Date.now());
+  startDate.setHours(0, 0, 0, 0);
+  var first = startDate.getDate() - startDate.getDay() + 1
+  var last = first + 4;
+  var monday = new Date(startDate.setDate(first));
+  var friday = new Date(startDate.setDate(last));
+
+  options.push({
+    value: monday.toISOString(),
+    end: friday.toISOString(),
+    displayValue: "This week (" + monday.toLocaleDateString("en-AU") + " to " + friday.toLocaleDateString("en-AU") + ")",
+    dateView: monday.toLocaleDateString("en-AU") + " to " + friday.toLocaleDateString("en-AU")
+  });
+
+  startDate = new Date(Date.now());
+  startDate.setHours(0, 0, 0, 0);
+  startDate.setDate(startDate.getDate() - 7);
+  first = startDate.getDate() - startDate.getDay() + 1
+  last = first + 4;
+  monday = new Date(startDate.setDate(first));
+  friday = new Date(startDate.setDate(last));
+
+  options.push({
+    value: monday.toISOString(),
+    end: friday.toISOString(),
+    displayValue: "Last week (" + monday.toLocaleDateString("en-AU") + " to " + friday.toLocaleDateString("en-AU") + ")",
+    dateView: monday.toLocaleDateString("en-AU") + " to " + friday.toLocaleDateString("en-AU")
+  });
+
+  /*startDate = new Date(Date.now());
   startDate.setHours(0, 0, 0, 0);
   startDate.setDate(startDate.getDate() - 7);
   endDate = new Date(startDate);
@@ -72,7 +103,7 @@ const DAILY = (function() {
     value: startDate.toISOString(),
     end: endDate.toISOString(),
     displayValue: "Last 7 days (" + startDate.toLocaleDateString("en-AU") + " to " + endDate.toLocaleDateString("en-AU") + ")"
-  });
+  });*/
 
   startDate = new Date(Date.now());
   startDate.setHours(0, 0, 0, 0);
@@ -84,7 +115,8 @@ const DAILY = (function() {
   options.push({
     value: startDate.toISOString(),
     end: endDate.toISOString(),
-    displayValue: "Last 14 days (" + startDate.toLocaleDateString("en-AU") + " to " + endDate.toLocaleDateString("en-AU") + ")"
+    displayValue: "Last 14 days (" + startDate.toLocaleDateString("en-AU") + " to " + endDate.toLocaleDateString("en-AU") + ")",
+    dateView: monday.toLocaleDateString("en-AU") + " to " + friday.toLocaleDateString("en-AU")
   });
 
   startDate = new Date(Date.now());
@@ -97,7 +129,8 @@ const DAILY = (function() {
   options.push({
     value: startDate.toISOString(),
     end: endDate.toISOString(),
-    displayValue: "Last 30 days (" + startDate.toLocaleDateString("en-AU") + " to " + endDate.toLocaleDateString("en-AU") + ")"
+    displayValue: "Last 30 days (" + startDate.toLocaleDateString("en-AU") + " to " + endDate.toLocaleDateString("en-AU") + ")",
+    dateView: monday.toLocaleDateString("en-AU") + " to " + friday.toLocaleDateString("en-AU")
   });
 
   console.log(options);
@@ -352,7 +385,7 @@ export class VSRChecklistComponent implements OnInit, AfterViewInit {
           row["frequencyCompliance"] = row["timesChecked"] / item.expectedCheckCount;
           row["vehicle"] = item.rego;
           row["state"] = item.stateReg;
-          row["address"] = item.branch;
+          row["address"] = item.user;
 
           result.push(row);
         }
