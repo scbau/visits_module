@@ -17,38 +17,46 @@ const routes: Routes = [
   {
     path: 'dashboard',
     component: DashboardComponent,
-    canActivate: [AuthGuard]
+    canActivate: [AuthGuard],
+    // outlet: 'sidebarContent'
   },
   {
     path: 'dashboard/not-visited',
-    component: NotVisitedComponent
+    component: NotVisitedComponent,
+    // outlet: 'sidebarContent'
   },
   {
     path: 'dashboard/checksheet',
-    component: ChecklistComponent
+    component: ChecklistComponent,
+    // outlet: 'sidebarContent'
   },
   {
     path: 'dashboard/checksheet/vsr',
-    component: VSRChecklistComponent
+    component: VSRChecklistComponent,
+    // outlet: 'sidebarContent'
   },
   {
     path: 'dashboard/checksheet/forklift',
-    component: ForkliftChecklistComponent
+    component: ForkliftChecklistComponent,
+    // outlet: 'sidebarContent'
   },
   {
     path: 'dashboard/checksheet/warehouse',
-    component: WarehouseChecklistComponent
+    component: WarehouseChecklistComponent,
+    // outlet: 'sidebarContent'
   },
   {
     path: 'dashboard/settings',
-    component: SettingsComponent
+    component: SettingsComponent,
+    // outlet: 'sidebarContent'
   },
   { path: 'login', component: LoginComponent },
   { path: '**', redirectTo: 'dashboard' }
 ];
 
 @NgModule({
-  imports: [RouterModule.forRoot(routes, { onSameUrlNavigation: 'reload' })],
+  // imports: [RouterModule.forRoot(routes, { onSameUrlNavigation: 'reload' })],
+  imports: [RouterModule.forRoot(routes)],
   exports: [RouterModule]
 })
 export class AppRoutingModule { }

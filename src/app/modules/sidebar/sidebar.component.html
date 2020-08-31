@@ -1,7 +1,7 @@
 <div class="nav-container">
 
     <mat-toolbar color="primary" style="position: sticky;">  
-        <button mat-icon-button (click)="snav.toggle()" aria-label="icon-button with a menu icon">
+        <button mat-icon-button (click)="snav.toggle()" *ngIf="currentUserExists" aria-label="icon-button with a menu icon">
           <mat-icon>menu</mat-icon>
         </button>
         <h1 class="app-name">{{ navbarText }}</h1>
@@ -58,7 +58,14 @@
               <mat-icon>settings</mat-icon>
               Settings
             </button>
+            <button mat-button style="text-align: left; width: 100%;" (click)="snav.toggle(); logout()">
+              <mat-icon>logout</mat-icon>
+              Logout
+            </button>
           </div>
+          <!-- <div style="margin: 10px;">
+            
+          </div> -->
         </div>
       </mat-sidenav>
 

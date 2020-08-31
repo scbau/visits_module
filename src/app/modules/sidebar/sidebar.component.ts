@@ -1,5 +1,5 @@
 import { MediaMatcher } from '@angular/cdk/layout';
-import { ChangeDetectorRef, Component, OnInit, OnDestroy } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
 import { ActivatedRoute, Router, NavigationStart } from '@angular/router';
 import { DomSanitizer } from '@angular/platform-browser';
 import { MatIconRegistry } from '@angular/material/icon';
@@ -12,6 +12,7 @@ import { List } from '../../models/list';
 // import { HeroService } from '../../services/data/data.services';
 
 import { MessageService } from '../../services/message/message.service';
+import { AuthenticationService } from '../../services/auth/auth.service';
 
 interface FoodNode {
     id: number,
@@ -103,7 +104,9 @@ var TREE_DATA: FoodNode[] = [
     styleUrls: ['./sidebar.component.css']
 })
 
-export class SidebarComponent implements OnInit, OnDestroy {
+export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
+
+    currentUserExists = true;
 
     treeControl = new NestedTreeControl<FoodNode>(node => node.children);
     dataSource = new MatTreeNestedDataSource<FoodNode>();
@@ -121,6 +124,7 @@ export class SidebarComponent implements OnInit, OnDestroy {
         private _router: Router,
         private activatedRoute: ActivatedRoute,
         private messageService: MessageService,
+        private authService: AuthenticationService,
         changeDetectorRef: ChangeDetectorRef, 
         media: MediaMatcher, 
         iconRegistry: MatIconRegistry, 
@@ -138,16 +142,28 @@ export class SidebarComponent implements OnInit, OnDestroy {
             'menu',
             sanitizer.bypassSecurityTrustResourceUrl('assets/img/icons/menu.svg'));
 
+        iconRegistry.addSvgIcon(
+          'logout',
+          sanitizer.bypassSecurityTrustResourceUrl('assets/img/icons/logout.svg'));
+
     }
 
     hasChild = (_: number, node: FoodNode) => !!node.children && node.children.length > 0;
     private _mobileQueryListener: () => void;
 
     ngOnInit() {
+      console.log("life: OnInit");
+        this.currentUserExists = !!this.authService.currentUserValue;
         // this.getHeroes();
         this.messageService.currentMessage.subscribe(message => { this.navbarText = message; console.log(message); });
 
         this.navbarText = this.data.title || "";
+    }
+
+
+    ngAfterViewInit() {
+      console.log("life: AfterViewInit");
+      this.currentUserExists = !!this.authService.currentUserValue;
     }
 
     /*getList(): void {
@@ -162,7 +178,9 @@ export class SidebarComponent implements OnInit, OnDestroy {
     }*/
 
     ngOnDestroy(): void {
-        this.mobileQuery.removeListener(this._mobileQueryListener);
+      console.log("life: OnDestroy");
+      this.mobileQuery.removeListener(this._mobileQueryListener);
+      this.currentUserExists = !!this.authService.currentUserValue;
     }
 
     changeRoute(node: FoodNode): void {
@@ -178,5 +196,12 @@ export class SidebarComponent implements OnInit, OnDestroy {
 
     public setTitle(text: string): void {
         this.navbarText = text;
+    }
+
+    logout(): void {
+      this.currentUserExists = false;
+      this.authService.logout();
+      console.log("Logout!")
+      this.router.navigateByUrl('login');
     }
 }

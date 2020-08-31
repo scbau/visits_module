@@ -25,6 +25,8 @@ export interface ChecklistData {
   timesCritical: number;
   location: string;
   forklift: string;
+  frequencyCompliance: number;
+  expectedCheckCount: number;
 }
 
 const DAILY = (function() {
@@ -116,55 +118,14 @@ const DAILY = (function() {
 })();
 
 
-/*const ELEMENT_DATA: ChecklistData[] = [
-  { timesChecked: 7, forklift: 'Forklift 1', location: 'NSW', timesCompliant: 5, compliance: "71%", timesCritical: 0 },
-  { timesChecked: 6, forklift: 'Forklift 2', location: 'NSW', timesCompliant: 6, compliance: "100%", timesCritical: 1 },
-  { timesChecked: 3, forklift: 'Forklift 1', location: 'SA', timesCompliant: 1, compliance: "33%", timesCritical: 1 },
-  { timesChecked: 2, forklift: 'Forklift 2', location: 'SA', timesCompliant: 1, compliance: "50%", timesCritical: 0 },
-  { timesChecked: 7, forklift: 'Forklift 1', location: 'WA', timesCompliant: 5, compliance: "71%", timesCritical: 0 },
-  { timesChecked: 6, forklift: 'Forklift 2', location: 'WA', timesCompliant: 6, compliance: "100%", timesCritical: 1 },
-  { timesChecked: 3, forklift: 'Forklift 1', location: 'QLD', timesCompliant: 1, compliance: "33%", timesCritical: 1 },
-  { timesChecked: 2, forklift: 'Forklift 2', location: 'QLD', timesCompliant: 1, compliance: "50%", timesCritical: 0 },
-  { timesChecked: 7, forklift: 'Forklift 1', location: 'VIC', timesCompliant: 5, compliance: "71%", timesCritical: 0 },
-  { timesChecked: 6, forklift: 'Forklift 2', location: 'VIC', timesCompliant: 6, compliance: "100%", timesCritical: 1 },
-  // { timesChecked: 20, location: 'Hydrogen', timesCompliant: 15, compliance: "75%", timesCritical: 2 },
-];
-
-
-const ELEMENT_DATA2: ChecklistData[] = [
-  { timesChecked: 14, forklift: 'Forklift 1', location: 'NSW', timesCompliant: 8, compliance: "64%", timesCritical: 2 },
-  { timesChecked: 10, forklift: 'Forklift 2', location: 'NSW', timesCompliant: 10, compliance: "100%", timesCritical: 0 },
-  { timesChecked: 5, forklift: 'Forklift 1', location: 'SA', timesCompliant: 1, compliance: "20%", timesCritical: 1 },
-  { timesChecked: 9, forklift: 'Forklift 2', location: 'SA', timesCompliant: 4, compliance: "89%", timesCritical: 5 },
-  { timesChecked: 14, forklift: 'Forklift 1', location: 'WA', timesCompliant: 8, compliance: "64%", timesCritical: 2 },
-  { timesChecked: 10, forklift: 'Forklift 2', location: 'WA', timesCompliant: 10, compliance: "100%", timesCritical: 0 },
-  { timesChecked: 5, forklift: 'Forklift 1', location: 'QLD', timesCompliant: 1, compliance: "20%", timesCritical: 1 },
-  { timesChecked: 9, forklift: 'Forklift 2', location: 'QLD', timesCompliant: 4, compliance: "89%", timesCritical: 5 },
-  { timesChecked: 14, forklift: 'Forklift 1', location: 'VIC', timesCompliant: 8, compliance: "64%", timesCritical: 2 },
-  { timesChecked: 10, forklift: 'Forklift 2', location: 'VIC', timesCompliant: 10, compliance: "100%", timesCritical: 0 },
-  // { timesChecked: 20, location: 'Hydrogen', timesCompliant: 15, compliance: "75%", timesCritical: 2 },
-];
-
-const ELEMENT_DATA3: ChecklistData[] = [
-  { timesChecked: 30, forklift: 'Forklift 1', location: 'NSW', timesCompliant: 23, compliance: "77%", timesCritical: 4 },
-  { timesChecked: 12, forklift: 'Forklift 2', location: 'NSW', timesCompliant: 10, compliance: "83%", timesCritical: 0 },
-  { timesChecked: 10, forklift: 'Forklift 1', location: 'SA', timesCompliant: 3, compliance: "33%", timesCritical: 1 },
-  { timesChecked: 16, forklift: 'Forklift 2', location: 'SA', timesCompliant: 10, compliance: "62%", timesCritical: 5 },
-  { timesChecked: 30, forklift: 'Forklift 1', location: 'WA', timesCompliant: 23, compliance: "77%", timesCritical: 4 },
-  { timesChecked: 12, forklift: 'Forklift 2', location: 'WA', timesCompliant: 10, compliance: "83%", timesCritical: 0 },
-  { timesChecked: 10, forklift: 'Forklift 1', location: 'QLD', timesCompliant: 3, compliance: "33%", timesCritical: 1 },
-  { timesChecked: 16, forklift: 'Forklift 2', location: 'QLD', timesCompliant: 10, compliance: "62%", timesCritical: 5 },
-  { timesChecked: 30, forklift: 'Forklift 1', location: 'VIC', timesCompliant: 23, compliance: "77%", timesCritical: 4 },
-  { timesChecked: 12, forklift: 'Forklift 2', location: 'VIC', timesCompliant: 10, compliance: "83%", timesCritical: 0 },
-  // { timesChecked: 20, location: 'Hydrogen', timesCompliant: 15, compliance: "75%", timesCritical: 2 },
-];*/
-
 @Component({
   selector: 'app-dashboard',
   templateUrl: './forklift.checklist.component.html',
   styleUrls: ['./checklist.component.css']
 })
 export class ForkliftChecklistComponent implements OnInit {
+
+  expectedCheckCount = 0;
 
   isLoading = false;
 
@@ -177,7 +138,7 @@ export class ForkliftChecklistComponent implements OnInit {
   periods = DAILY;
 
   // displayedColumns: string[] = ['location', 'forklift', 'timesChecked', 'timesCompliant', 'compliance', 'timesCritical'];
-  displayedColumns: string[] = ['state', 'forkliftName', 'branch', 'address', 'timesChecked', 'timesCompliant', 'compliance', 'timesCritical'];
+  displayedColumns: string[] = ['state', 'forkliftName', 'branch', 'address', 'timesChecked', 'timesCompliant', 'frequencyCompliance', 'compliance', 'timesCritical'];
 
   dataSource = new MatTableDataSource<ChecklistData>([]);
   // dataSource2 = new MatTableDataSource<ChecklistData>(ELEMENT_DATA_VSR);
@@ -356,6 +317,7 @@ export class ForkliftChecklistComponent implements OnInit {
 
   private updateDataSource(dataList) {
     this.currentElementData = dataList;
+    this.expectedCheckCount = dataList[0].expectedCheckCount;
     var tempArray = [];
     if (!this.selectedState) {
       tempArray = this.currentElementData;
@@ -417,6 +379,9 @@ export class ForkliftChecklistComponent implements OnInit {
               timesCritical: 0
             }
           }
+
+          row["expectedCheckCount"] = item.expectedCheckCount;
+          row["frequencyCompliance"] = row["timesChecked"] / item.expectedCheckCount;
           row["forkliftName"] = item.forkliftName;
           row["state"] = item.state;
           row["address"] = item.address;

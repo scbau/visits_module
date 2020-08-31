@@ -7,6 +7,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { ErrorStateMatcher } from '@angular/material/core';
 
 import { ChecklistService } from '../../services/checklist/checklist.service';
+import { AuthenticationService } from '../../services/auth/auth.service';
 
 import { FormControl, FormGroupDirective, NgForm, Validators } from '@angular/forms';
 
@@ -266,6 +267,9 @@ const CHECKLIST_OPTIONS = [
 })
 export class WarehouseChecklistComponent implements OnInit, AfterViewInit {
 
+  currentUserRole = 'all';
+  currentUserState = 'all';
+
   expectedCheckCount = 0;
   isLoading = false;
 
@@ -306,13 +310,32 @@ export class WarehouseChecklistComponent implements OnInit, AfterViewInit {
   // paginator size options
   pageSizeOptions = [10, 20, 40, 100];
 
-  constructor(private whService: ChecklistService) { }
+  constructor(private whService: ChecklistService, private authService: AuthenticationService) { }
 
   ngAfterViewInit(): void {
     this.fetchData();
   }
 
   ngOnInit(): void {
+    // console.log("life: OnInit");
+    var currentUser = this.authService.currentUserValue;
+    console.log(currentUser);
+    if (currentUser) {
+      if (currentUser.role == 'admin') {
+        this.currentUserRole = 'all';
+        this.currentUserState = 'all';
+      }
+      else if (currentUser.role == 'stateAdmin') {
+        this.currentUserRole = 'state';
+        this.currentUserState = currentUser.state;
+        this.selectedState = this.currentUserState;
+      }
+      else if (currentUser.role == 'entityAdmin') {
+        this.currentUserRole = 'entity';
+        this.currentUserState = currentUser.state;
+        // TODO: find a way to limit selection to states of entity (see master excel sheet for list of states per entity)
+      }
+    }
     this.updateDataSource(this.currentElementData);
   }
 

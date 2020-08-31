@@ -79,18 +79,18 @@
     <table style="width: 100%;" mat-table matSort matSortActive="compliance" matSortDirection="desc" [dataSource]="dataSource" class="mat-elevation-z8">
 
       <ng-container matColumnDef="state">
-        <th style="width: 10%!important;" mat-header-cell *matHeaderCellDef mat-sort-header> State </th>
-        <td style="width: 10%!important;" mat-cell *matCellDef="let element"> {{element.state}} </td>
+        <th style="width: 8%!important;" mat-header-cell *matHeaderCellDef mat-sort-header> State </th>
+        <td style="width: 8%!important;" mat-cell *matCellDef="let element"> {{element.state}} </td>
       </ng-container>
 
       <ng-container matColumnDef="forkliftName">
-        <th style="width: 15%!important;" mat-header-cell *matHeaderCellDef mat-sort-header> Forklift Name </th>
-        <td style="width: 15%!important;" mat-cell *matCellDef="let element"> {{element.forkliftName}} </td>
+        <th style="width: 13%!important;" mat-header-cell *matHeaderCellDef mat-sort-header> Forklift Name </th>
+        <td style="width: 13%!important;" mat-cell *matCellDef="let element"> {{element.forkliftName}} </td>
       </ng-container>
 
       <ng-container matColumnDef="branch">
-        <th style="width: 15%!important;" mat-header-cell *matHeaderCellDef mat-sort-header> Branch </th>
-        <td style="width: 15%!important;" mat-cell *matCellDef="let element"> {{element.branch}} </td>
+        <th style="width: 17%!important;" mat-header-cell *matHeaderCellDef mat-sort-header> Branch </th>
+        <td style="width: 17%!important;" mat-cell *matCellDef="let element"> {{element.branch}} </td>
       </ng-container>
 
       <ng-container matColumnDef="address">
@@ -99,13 +99,18 @@
       </ng-container>
 
       <ng-container matColumnDef="timesChecked">
-        <th style="width: 10%!important;" mat-header-cell *matHeaderCellDef mat-sort-header> Times Checked </th>
-        <td style="width: 10%!important; padding-left: 20px;" mat-cell *matCellDef="let element"> {{element.timesChecked}} </td>
+        <th style="width: 8%!important;" mat-header-cell *matHeaderCellDef mat-sort-header> Times Checked </th>
+        <td style="width: 8%!important; padding-left: 20px;" mat-cell *matCellDef="let element"> {{element.timesChecked}} </td>
       </ng-container>
 
       <ng-container matColumnDef="timesCompliant">
-        <th style="width: 12%!important;" mat-header-cell *matHeaderCellDef mat-sort-header> Times Compliant </th>
-        <td style="width: 12%!important; padding-left: 20px;" mat-cell *matCellDef="let element"> {{element.timesCompliant}} </td>
+        <th style="width: 8%!important;" mat-header-cell *matHeaderCellDef mat-sort-header> Times Compliant </th>
+        <td style="width: 8%!important; padding-left: 20px;" mat-cell *matCellDef="let element"> {{element.timesCompliant}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="frequencyCompliance">
+        <th style="width: 8%!important;" mat-header-cell *matHeaderCellDef mat-sort-header> Frequency Compliance </th>
+        <td style="width: 8%!important; padding-left: 20px;" mat-cell *matCellDef="let element"> {{element.frequencyCompliance | percent}} </td>
       </ng-container>
 
       <ng-container matColumnDef="compliance">
