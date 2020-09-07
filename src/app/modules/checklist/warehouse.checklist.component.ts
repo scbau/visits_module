@@ -1,5 +1,7 @@
-import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, ViewChild, AfterViewInit, OnDestroy } from '@angular/core';
 import * as moment from 'moment';
+
+import { Router, NavigationEnd } from '@angular/router';
 
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
@@ -9,7 +11,7 @@ import { ErrorStateMatcher } from '@angular/material/core';
 import { ChecklistService } from '../../services/checklist/checklist.service';
 import { AuthenticationService } from '../../services/auth/auth.service';
 
-import { FormControl, FormGroupDirective, NgForm, Validators } from '@angular/forms';
+import { FormControl, FormGroup, FormGroupDirective, NgForm, Validators } from '@angular/forms';
 
 /** Error when invalid control is dirty, touched, or submitted. */
 export class MyErrorStateMatcher implements ErrorStateMatcher {
@@ -29,6 +31,7 @@ export interface ChecklistData {
   address: string;
   frequencyCompliance: number;
   expectedCheckCount: number;
+  items: [string]
 }
 
 export interface PeriodData {
@@ -69,7 +72,10 @@ const DAILY = (function() {
   var first = startDate.getDate() - startDate.getDay() + 1
   var last = first + 4;
   var monday = new Date(startDate.setDate(first));
-  var friday = new Date(startDate.setDate(last));
+
+  var friday = new Date(startDate.valueOf());
+  friday.setDate(friday.getDate() + 4);
+  // var friday = new Date(startDate.setDate(first + 4));
 
   options.push({
     value: monday.toISOString(),
@@ -104,7 +110,7 @@ const DAILY = (function() {
     value: startDate.toISOString(),
     end: endDate.toISOString(),
     displayValue: "Last 14 days (" + startDate.toLocaleDateString("en-AU") + " to " + endDate.toLocaleDateString("en-AU") + ")",
-    dateView: monday.toLocaleDateString("en-AU") + " to " + friday.toLocaleDateString("en-AU")
+    dateView: startDate.toLocaleDateString("en-AU") + " to " + endDate.toLocaleDateString("en-AU")
   });
 
   startDate = new Date(Date.now());
@@ -118,10 +124,17 @@ const DAILY = (function() {
     value: startDate.toISOString(),
     end: endDate.toISOString(),
     displayValue: "Last 30 days (" + startDate.toLocaleDateString("en-AU") + " to " + endDate.toLocaleDateString("en-AU") + ")",
-    dateView: monday.toLocaleDateString("en-AU") + " to " + friday.toLocaleDateString("en-AU")
+    dateView: startDate.toLocaleDateString("en-AU") + " to " + endDate.toLocaleDateString("en-AU")
   });
 
-  console.log(options);
+  options.push({
+    value: "Custom",
+    end: "",
+    displayValue: "Custom",
+    dateView: ""
+  });
+
+  // console.log(options);
   return options;
 })();
 
@@ -154,7 +167,8 @@ var WEEKLY = (function() {
       var item = {
         value: startDateISO,
         end: end.toISOString(),
-        displayValue: startDateWeek + " to " + endDateWeek
+        displayValue: startDateWeek + " to " + endDateWeek,
+        dateView: startDateWeek + " to " + endDateWeek
       };
 
       if (moment().isBetween(moment(startDateISO), moment(endDateISO), undefined, '[]')) { // 6/15 0:00:00 to 6/21   0:00:00
@@ -164,7 +178,7 @@ var WEEKLY = (function() {
     }
   }
 
-  console.log(options);
+  // console.log(options);
 
   return options;
 })();
@@ -182,7 +196,8 @@ var MONTHLY = (function() {
   var options = [{
     value: startDate.toISOString(),
     end: endDate.toISOString(),
-    displayValue: (startDate.getMonth() + 1) + "-" + startDate.getFullYear()
+    displayValue: (startDate.getMonth() + 1) + "-" + startDate.getFullYear(),
+    dateView: (startDate.getMonth() + 1) + "-" + startDate.getFullYear()
   }];
 
   while (options.length < (12 * (LAST_YEARS+1))) {
@@ -194,11 +209,12 @@ var MONTHLY = (function() {
     options.push({
       value: startDate.toISOString(),
       end: endDate.toISOString(),
-      displayValue: (startDate.getMonth() + 1) + "-" + startDate.getFullYear()
+      displayValue: (startDate.getMonth() + 1) + "-" + startDate.getFullYear(),
+      dateView: (startDate.getMonth() + 1) + "-" + startDate.getFullYear()
     });
   }
 
-  console.log("MONTHLY", options);
+  // console.log("MONTHLY", options);
   return options;
 })();
 
@@ -214,7 +230,8 @@ var ANNUAL = (function() {
   var options = [{ 
     value: startDate.toISOString(), 
     end: endDate.toISOString(),
-    displayValue: startDate.getFullYear()  
+    displayValue: startDate.getFullYear(),
+    dateView: startDate.getFullYear()
   }];
 
   while (options.length < (LAST_YEARS+1)) {
@@ -223,11 +240,12 @@ var ANNUAL = (function() {
     options.push({ 
       value: startDate.toISOString(),
       end: endDate.toISOString(), 
-      displayValue: startDate.getFullYear() 
+      displayValue: startDate.getFullYear(),
+      dateView: startDate.getFullYear()
     });
   }
 
-  console.log("ANNUAL", options);
+  // console.log("ANNUAL", options);
 
   return options;
 })();
@@ -265,7 +283,14 @@ const CHECKLIST_OPTIONS = [
   templateUrl: './warehouse.checklist.component.html',
   styleUrls: ['./checklist.component.css']
 })
-export class WarehouseChecklistComponent implements OnInit, AfterViewInit {
+export class WarehouseChecklistComponent implements OnInit, AfterViewInit, OnDestroy, OnDestroy {
+  
+  range = new FormGroup({
+    start: new FormControl(),
+    end: new FormControl()
+  });
+
+  navigationSubscription;
 
   currentUserRole = 'all';
   currentUserState = 'all';
@@ -283,7 +308,7 @@ export class WarehouseChecklistComponent implements OnInit, AfterViewInit {
   matcher = new MyErrorStateMatcher();
   matcherDaily = new MyErrorStateMatcher();
 
-  displayedColumns: string[] = ['state', 'warehouse', 'address', 'timesChecked', 'timesCompliant', 'frequencyCompliance', 'compliance', 'timesCritical'];
+  displayedColumns: string[] = ['state', 'warehouse', 'address', 'timesChecked', 'timesCompliant', 'frequencyCompliance', 'compliance', 'timesCritical', 'items'];
   displayedOptionColumns: string[] = ['period', 'close'];
   dataSource = new MatTableDataSource<ChecklistData>([]);
 
@@ -303,17 +328,52 @@ export class WarehouseChecklistComponent implements OnInit, AfterViewInit {
   currentElementData = [];
 
   // filter options array 
-  states = ["ACT", "NSW", "NZ", "NT", "QLD", "SA", "TAS", "VIC", "WA"];
+  states = ["NSW", "NZ", "QLD", "SA", "TEST", "VIC", "WA"];
   periods = CHECKLIST_OPTIONS[0].periodOptions;
   checklists = CHECKLIST_OPTIONS;
 
   // paginator size options
   pageSizeOptions = [10, 20, 40, 100];
 
-  constructor(private whService: ChecklistService, private authService: AuthenticationService) { }
+  constructor(private whService: ChecklistService, private authService: AuthenticationService, private router: Router) {
+    this.navigationSubscription = this.router.events.subscribe((e: any) => {
+      // If it is a NavigationEnd event re-initalise the component
+      if (e instanceof NavigationEnd) {
+        this.initialize();
+      }
+    });
+  }
+
+  initialize() {
+    var currentUser = this.authService.currentUserValue;
+    console.log(currentUser);
+    if (currentUser) {
+      if (currentUser.role == 'admin') {
+        this.currentUserRole = 'all';
+        this.currentUserState = 'all';
+      }
+      else if (currentUser.role == 'stateAdmin') {
+        this.currentUserRole = 'state';
+        this.currentUserState = currentUser.state;
+        this.selectedState = this.currentUserState;
+      }
+      else if (currentUser.role == 'entityAdmin') {
+        this.currentUserRole = 'entity';
+        this.currentUserState = currentUser.state;
+        // TODO: find a way to limit selection to states of entity (see master excel sheet for list of states per entity)
+      }
+    }
+    this.fetchData();
+  }
+
+  ngOnDestroy() {
+    if (this.navigationSubscription) {
+      this.navigationSubscription.unsubscribe();
+    }
+  }
 
   ngAfterViewInit(): void {
-    this.fetchData();
+    // this.fetchData();
   }
 
   ngOnInit(): void {
@@ -336,7 +396,7 @@ export class WarehouseChecklistComponent implements OnInit, AfterViewInit {
         // TODO: find a way to limit selection to states of entity (see master excel sheet for list of states per entity)
       }
     }
-    this.updateDataSource(this.currentElementData);
+    // this.updateDataSource(this.currentElementData);
   }
 
   // filter state
@@ -421,6 +481,9 @@ export class WarehouseChecklistComponent implements OnInit, AfterViewInit {
 
   // query data
   fetchData() {
+
+    console.log("!!!!selectedOptionDaily", this.selectedOptionDaily);
+
     this.isLoading = true;
     // handle what type of checklist is displayed and must update date range default value
     var params = [];
@@ -450,7 +513,7 @@ export class WarehouseChecklistComponent implements OnInit, AfterViewInit {
             continue;
           }
 
-          console.log(item);
+          // console.log(item);
           if (!states[item.state]) {
             states[item.state] = 1;
           }
@@ -470,6 +533,7 @@ export class WarehouseChecklistComponent implements OnInit, AfterViewInit {
               timesCritical: 0
             }
           }
+          row["items"] = item.items;
           row["expectedCheckCount"] = item.expectedCheckCount;
           row["frequencyCompliance"] = row["timesChecked"] / item.expectedCheckCount;
           row["warehouse"] = item.site;
@@ -481,9 +545,30 @@ export class WarehouseChecklistComponent implements OnInit, AfterViewInit {
 
         console.log(states);
         console.log(Object.keys(states));
+        this.states = Object.keys(states).sort();
 
         this.updateDataSource(result);
       });
+  }
+
+  getDateView() {
+    console.log(this.selectedOption);
+    if (this.selectedChecklist.value == 'daily') {
+      return this.selectedOptionDaily.dateView;
+    }
+    else {
+      if (this.selectedOption.length > 1) {
+        var items = [];
+        for (var option of this.selectedOption) {
+          items.push(option.dateView);
+        }
+
+        // if (item)
+        return items[0] + ` (+${items.length - 1} ${items.length === 2 ? 'other' : 'others'})`;
+      }
+      else
+        return this.selectedOption[0].dateView;
+    }
   }
 
   resetPeriodFilter() {

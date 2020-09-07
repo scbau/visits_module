@@ -1,15 +1,11 @@
 import { MediaMatcher } from '@angular/cdk/layout';
-import { ChangeDetectorRef, Component, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
-import { ActivatedRoute, Router, NavigationStart } from '@angular/router';
-import { DomSanitizer } from '@angular/platform-browser';
+import { ChangeDetectorRef, Component, OnInit, OnDestroy, AfterViewInit, ViewChild } from '@angular/core';
+import { ActivatedRoute, Router, NavigationStart, NavigationEnd } from '@angular/router';
+import { DomSanitizer, Title } from '@angular/platform-browser';
 import { MatIconRegistry } from '@angular/material/icon';
 
 import { NestedTreeControl } from '@angular/cdk/tree';
 import { MatTreeNestedDataSource } from '@angular/material/tree';
-
-import { Hero } from '../../models/data';
-import { List } from '../../models/list';
-// import { HeroService } from '../../services/data/data.services';
 
 import { MessageService } from '../../services/message/message.service';
 import { AuthenticationService } from '../../services/auth/auth.service';
@@ -20,78 +16,66 @@ interface FoodNode {
     children?: FoodNode[],
     route?: string,
     selected?: boolean,
-    subname?: string
+    subname?: string,
+    role: string[]
 }
 
 var TREE_DATA: FoodNode[] = [
   {
     "id": 1,
     "name": "Scorecard",
-    "route": "/dashboard"
+    "route": "/dashboard",
+    "role": ["admin"]
   },
   {
     "id": 2,
     "name": "Not Visited",
-    "route": "/dashboard/not-visited"
+    "route": "/dashboard/not-visited",
+    "role": ["admin"]
   },
   {
     "id": 3,
     "name": "Checklist Compliance",
+    "role": ["admin", "stateAdmin", "entityAdmin"],
     "route": "/dashboard/checksheet",
     "children": [
       {
         "id": 31,
         "name": "Forklift Pre-start Checklist",
-        "route": "/dashboard/checksheet/forklift"
+        "route": "/dashboard/checksheet/forklift",
+        "role": ["admin", "stateAdmin", "entityAdmin"],
       },
       {
         "id": 32,
         "name": "VSR Pre-start Checklist",
         "route": "/dashboard/checksheet/vsr",
-        /*"children": [
-          {
-            "id": 321,
-            "name": "Daily",
-            "route": "/dashboard/checksheet/vsr/daily",
-          },
-          {
-            "id": 322,
-            "name": "Monthly",
-            "route": "/dashboard/checksheet/vsr/monthly",
-          },
-          {
-            "id": 323,
-            "name": "Maintenance",
-            "route": "/dashboard/checksheet/vsr/maintenance",
-          }
-        ]*/
-      }, 
+        "role": ["admin", "stateAdmin", "entityAdmin"]
+      },
       {
         "id": 33,
         "name": "Warehouse Depot Checklist",
         "route": "/dashboard/checksheet/warehouse",
-        /*"children": [
-          {
-            "id": 331,
-            "name": "Daily",
-            "route": "/dashboard/checksheet/warehouse/daily",
-          },
-          {
-            "id": 332,
-            "name": "Weekly",
-            "route": "/dashboard/checksheet/warehouse/weekly",
-          },
-          {
-            "id": 333,
-            "name": "Monthly",
-            "route": "/dashboard/checksheet/warehouse/monthly",
-          },
-          {
-            "id": 334,
-            "name": "Bi-Annual/Annual",
-            "route": "/dashboard/checksheet/warehouse/biannual",
-          }
-        ]*/
+        "role": ["admin", "stateAdmin", "entityAdmin"],
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "name": "Checklist Compliance",
+    "role": ["storeAdmin"],
+    "route": "/dashboard/checksheet",
+    "children": [
+      {
+        "id": 41,
+        "name": "Forklift Pre-start Checklist",
+        "route": "/dashboard/checksheet/forklift",
+        "role": ["storeAdmin"],
+      },
+      {
+        "id": 42,
+        "name": "Warehouse Depot Checklist",
+        "route": "/dashboard/checksheet/warehouse",
+        "role": ["storeAdmin"],
       }
     ]
   }
@@ -105,13 +89,13 @@ var TREE_DATA: FoodNode[] = [
 })
 
 export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
+    navigationSubscription;
 
     currentUserExists = true;
 
     treeControl = new NestedTreeControl<FoodNode>(node => node.children);
     dataSource = new MatTreeNestedDataSource<FoodNode>();
 
-    heroes: Hero[];
     panelOpenState = true;
     navbarText: string = "";
     mobileQuery: MediaQueryList;
@@ -120,7 +104,61 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     data;
     message;
 
+    @ViewChild('tree') tree;
+
+    getTitle(state, parent) {
+      var data = [];
+      if (parent && parent.snapshot.data && parent.snapshot.data.title) {
+        data.push(parent.snapshot.data.title);
+      }
+
+      if (state && parent) {
+        data.push(... this.getTitle(state, state.firstChild(parent)));
+      }
+      return data;
+    }
+
+    initialize(media, changeDetectorRef, iconRegistry, sanitizer) {
+
+      this.currentUserExists = !!this.authService.currentUserValue;
+
+      this.dataSource.data = TREE_DATA.filter((value, index, array) => {
+        if (this.authService.currentUserValue) {
+          /*if (value.children) {
+            var temp = [];
+            for (var item of value.children) {
+              if (item.role.includes(this.authService.currentUserValue.role)) {
+                temp.push(item);
+              }
+            }
+
+            let holder = Object.assign({}, value);
+            holder.children = temp;
+
+            // value.children = temp;
+            return holder.role.includes(this.authService.currentUserValue.role);
+          }
+          else */
+            return value.role.includes(this.authService.currentUserValue.role);
+        }
+        else return false;
+      });
+
+      this.mobileQuery = media.matchMedia('(max-width: 600px)');
+      this._mobileQueryListener = () => changeDetectorRef.detectChanges();
+      this.mobileQuery.addListener(this._mobileQueryListener);
+
+      iconRegistry.addSvgIcon(
+        'menu',
+        sanitizer.bypassSecurityTrustResourceUrl('assets/img/icons/menu.svg'));
+
+      iconRegistry.addSvgIcon(
+        'logout',
+        sanitizer.bypassSecurityTrustResourceUrl('assets/img/icons/logout.svg'));
+    }
+
     constructor(
+        private titleService: Title,
         private _router: Router,
         private activatedRoute: ActivatedRoute,
         private messageService: MessageService,
@@ -130,21 +168,23 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
         iconRegistry: MatIconRegistry, 
         sanitizer: DomSanitizer) {
 
-        this.router = _router;
+      this.navigationSubscription = this._router.events.subscribe((e: any) => {
+        // If it is a NavigationEnd event re-initalise the component
+        if (e instanceof NavigationEnd) {
+          // this.currentUserExists = !!this.authService.currentUserValue;
+          this.initialize(media, changeDetectorRef, iconRegistry, sanitizer);
 
-        this.dataSource.data = TREE_DATA;
+          var title = this.getTitle(_router.routerState, _router.routerState.root).join('-');
+          console.log('title', title);
+          titleService.setTitle(title);
 
-        this.mobileQuery = media.matchMedia('(max-width: 600px)');
-        this._mobileQueryListener = () => changeDetectorRef.detectChanges();
-        this.mobileQuery.addListener(this._mobileQueryListener);
+          this.navbarText = title;
+        }
+      });
 
-        iconRegistry.addSvgIcon(
-            'menu',
-            sanitizer.bypassSecurityTrustResourceUrl('assets/img/icons/menu.svg'));
+      this.initialize(media, changeDetectorRef, iconRegistry, sanitizer);
 
-        iconRegistry.addSvgIcon(
-          'logout',
-          sanitizer.bypassSecurityTrustResourceUrl('assets/img/icons/logout.svg'));
+      this.router = _router;
 
     }
 
@@ -153,34 +193,49 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
 
     ngOnInit() {
       console.log("life: OnInit");
+      // console.log(this.authService.currentUserValue.role);
         this.currentUserExists = !!this.authService.currentUserValue;
         // this.getHeroes();
         this.messageService.currentMessage.subscribe(message => { this.navbarText = message; console.log(message); });
 
-        this.navbarText = this.data.title || "";
+      if (this.data)
+        this.navbarText = this.data.title;
+      else
+        this.navbarText = "";
     }
 
+    getUserDisplay() {
+      if (this.authService.currentUserValue) {
+        return this.authService.currentUserValue.lastName + ", " + this.authService.currentUserValue.firstName;
+      }
+    }
 
     ngAfterViewInit() {
+      // this.tree.treeControl.expandAll();
+
       console.log("life: AfterViewInit");
       this.currentUserExists = !!this.authService.currentUserValue;
     }
-
-    /*getList(): void {
-        console.log('test');
-        this.heroService.getList()
-            .subscribe(list => this.fillerNav = list);
-    }*/
-
-    /*getHeroes(): void {
-        this.heroService.getHeroes()
-            .subscribe(heroes => this.heroes = heroes);
-    }*/
 
     ngOnDestroy(): void {
       console.log("life: OnDestroy");
       this.mobileQuery.removeListener(this._mobileQueryListener);
       this.currentUserExists = !!this.authService.currentUserValue;
+      if (this.navigationSubscription) {
+        this.navigationSubscription.unsubscribe();
+      }
+    }
+
+    isUserAdmin(): boolean {
+      if (this.authService.currentUserValue)
+        return this.authService.currentUserValue.role == "admin";
+      else return false;
+    }
+
+    hasAccess(node): boolean {
+      if (this.authService.currentUserValue)
+        return node.role.includes(this.authService.currentUserValue.role);
+      else return false;
     }
 
     changeRoute(node: FoodNode): void {
@@ -201,6 +256,7 @@ export class SidebarComponent implements OnInit, OnDestroy, AfterViewInit {
     logout(): void {
       this.currentUserExists = false;
       this.authService.logout();
+      this.navbarText = "";
       console.log("Logout!")
       this.router.navigateByUrl('login');
     }

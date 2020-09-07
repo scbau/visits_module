@@ -13,10 +13,14 @@ import { MatPaginatorModule } from '@angular/material/paginator';
 import { MatSortModule } from '@angular/material/sort';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatDialogModule } from '@angular/material/dialog';
+import { MatCardModule } from '@angular/material/card';
+import { MatInputModule } from '@angular/material/input';
+import { MatDatepickerModule } from '@angular/material/datepicker';
 
 
 @NgModule({
   exports: [
+    MatInputModule,
     MatButtonModule,
     MatDialogModule,
     MatIconModule,
@@ -30,7 +34,9 @@ import { MatDialogModule } from '@angular/material/dialog';
     // MatTableDataSource,
     MatPaginatorModule,
     MatSortModule,
-    MatProgressBarModule
+    MatProgressBarModule,
+    MatCardModule,
+    MatDatepickerModule
   ]
 })
 export class MaterialModule {}

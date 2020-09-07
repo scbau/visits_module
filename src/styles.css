@@ -21,6 +21,11 @@ li.carousel-slide {
     height: 100%!important;
 }
 
+.alert {
+  color: red;
+  font-weight: bold;
+}
+
 /*div.page, div.canvasWrapper, div.textLayer {
     width:100%!important;
 }

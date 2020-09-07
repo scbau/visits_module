@@ -2,7 +2,7 @@
   <div fxLayout="column" fxLayoutAlign="start stretch" style="padding: 10px; width: 35%;">
       <h3><b>Filters</b></h3>
     <!-- <div> -->
-      <mat-form-field>
+      <mat-form-field *ngIf="currentUserRole != 'state'">
         <mat-label>State</mat-label>
         <mat-select (selectionChange)="filterState($event)" [disabled]="isLoading || currentUserRole == 'state'" [(ngModel)]="selectedState">
           <mat-option value="" selected>
@@ -122,7 +122,7 @@
   </div>
 
   <div style="width: 100%; padding: 10px;">
-    <h2 style="margin-bottom: 8px!important;">{{ selectedChecklist.displayValue }} VSR Pre-start Checklist Compliance ({{selectedOptionDaily.dateView}})</h2>
+    <h2 style="margin-bottom: 8px!important;">{{ selectedChecklist.displayValue }} VSR Pre-start Checklist Compliance ({{ getDateView() }})</h2>
     <p *ngIf="expectedCheckCount">(Expected times checked: {{ expectedCheckCount }})</p>
     <mat-progress-bar mode="indeterminate" color="accent" *ngIf="isLoading"></mat-progress-bar>
     <table style="width: 100%;" mat-table matSort matSortActive="compliance" matSortDirection="desc" [dataSource]="dataSource" class="mat-elevation-z8">

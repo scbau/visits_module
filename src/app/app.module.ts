@@ -38,6 +38,7 @@ import { PersistenceService } from './services/persistence/persistence.service';
 
 import { VisitService } from './services/visit/visit.service';
 import { ChecklistService } from './services/checklist/checklist.service';
+import { RoleGuardService } from './services/auth/role-guard.service';
 
 import { DownloadComponent } from './modules/download/download.component';
 import { LandingComponent } from './modules/landing/landing.component';
@@ -54,6 +55,11 @@ import { LoginComponent } from './modules/login/login.component';
 import { JwtInterceptor } from './modules/_helpers/jwt.interceptor';
 import { ErrorInterceptor } from './modules/_helpers/error.interceptor';
 
+import { JwtModule } from "@auth0/angular-jwt";
+
+export function tokenGetter() {
+  return localStorage.getItem("access_token");
+}
 
 
 @NgModule({
@@ -76,6 +82,11 @@ import { ErrorInterceptor } from './modules/_helpers/error.interceptor';
   imports: [
     BrowserModule,
     HttpClientModule,
+    JwtModule.forRoot({
+      config: {
+        tokenGetter: tokenGetter
+      },
+    }),
     HttpModule,
     ChartsModule,
     /*HttpClientInMemoryWebApiModule.forRoot(
@@ -96,6 +107,7 @@ import { ErrorInterceptor } from './modules/_helpers/error.interceptor';
   ],
   // entryComponents: [SettingsComponent],
   providers: [ 
+    RoleGuardService,
     VisitService,
     ChecklistService,
     {

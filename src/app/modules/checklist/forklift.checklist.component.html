@@ -1,10 +1,10 @@
 <div style="padding: 10px; height: 100%;" fxLayout="row" fxLayoutAlign="space-around stretch">
   <div fxLayout="column" fxLayoutAlign="start stretch" style="padding: 10px; width: 35%;">
-      <h3><b>Filters</b></h3>
+      <h3 *ngIf="currentUserRole != 'state'"><b>Filters</b></h3>
     <!-- <div> -->
-      <mat-form-field>
+      <mat-form-field *ngIf="currentUserRole != 'state'">
         <mat-label>State</mat-label>
-        <mat-select (selectionChange)="filterState($event)" [(ngModel)]="selectedState">
+        <mat-select (selectionChange)="filterState($event)" [disabled]="isLoading || currentUserRole == 'state'" [(ngModel)]="selectedState">
           <mat-option value="" selected>
             All States
           </mat-option>
@@ -74,7 +74,7 @@
 
   <div style="width: 100%; padding: 10px;">
     <h2>Daily Forklift Pre-start Checklist Compliance ({{selectedOptionDaily.dateView}})</h2>
-    <!-- <p *ngIf="expectedCheckCount">(Expected times checked: {{ expectedCheckCount }})</p> -->
+    <p *ngIf="expectedCheckCount">(Expected times checked: {{ expectedCheckCount }})</p>
     <mat-progress-bar mode="indeterminate" color="accent" *ngIf="isLoading"></mat-progress-bar>
     <table style="width: 100%;" mat-table matSort matSortActive="compliance" matSortDirection="desc" [dataSource]="dataSource" class="mat-elevation-z8">
 

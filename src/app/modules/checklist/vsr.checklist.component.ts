@@ -1,5 +1,7 @@
-import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, ViewChild, AfterViewInit, OnDestroy } from '@angular/core';
 import * as moment from 'moment';
+
+import { Router, NavigationEnd } from '@angular/router';
 
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
@@ -10,7 +12,7 @@ import { ChecklistService } from '../../services/checklist/checklist.service';
 import { AuthenticationService } from '../../services/auth/auth.service';
 // import { UiService } from '../../services/overlay/ui.service'
 
-import { FormControl, FormGroupDirective, NgForm, Validators } from '@angular/forms';
+import { FormControl, FormGroup, FormGroupDirective, NgForm, Validators } from '@angular/forms';
 
 /** Error when invalid control is dirty, touched, or submitted. */
 export class MyErrorStateMatcher implements ErrorStateMatcher {
@@ -69,8 +71,11 @@ const DAILY = (function() {
   var first = startDate.getDate() - startDate.getDay() + 1
   var last = first + 4;
   var monday = new Date(startDate.setDate(first));
-  var friday = new Date(startDate.setDate(last));
 
+  var friday = new Date(startDate.valueOf());
+  friday.setDate(friday.getDate() + 4);
+  // var friday = new Date(startDate.setDate(first + 4));
+  
   options.push({
     value: monday.toISOString(),
     end: friday.toISOString(),
@@ -117,7 +122,7 @@ const DAILY = (function() {
     value: startDate.toISOString(),
     end: endDate.toISOString(),
     displayValue: "Last 14 days (" + startDate.toLocaleDateString("en-AU") + " to " + endDate.toLocaleDateString("en-AU") + ")",
-    dateView: monday.toLocaleDateString("en-AU") + " to " + friday.toLocaleDateString("en-AU")
+    dateView: startDate.toLocaleDateString("en-AU") + " to " + endDate.toLocaleDateString("en-AU")
   });
 
   startDate = new Date(Date.now());
@@ -131,7 +136,7 @@ const DAILY = (function() {
     value: startDate.toISOString(),
     end: endDate.toISOString(),
     displayValue: "Last 30 days (" + startDate.toLocaleDateString("en-AU") + " to " + endDate.toLocaleDateString("en-AU") + ")",
-    dateView: monday.toLocaleDateString("en-AU") + " to " + friday.toLocaleDateString("en-AU")
+    dateView: startDate.toLocaleDateString("en-AU") + " to " + endDate.toLocaleDateString("en-AU")
   });
 
   console.log(options);
@@ -153,7 +158,8 @@ const MONTHLY = (function() {
   var options = [{
     value: startDate.toISOString(),
     end: endDate.toISOString(),
-    displayValue: (startDate.getMonth() + 1) + "-" + startDate.getFullYear()
+    displayValue: (startDate.getMonth() + 1) + "-" + startDate.getFullYear(),
+    dateView: (startDate.getMonth() + 1) + "-" + startDate.getFullYear()
   }];
 
   while (options.length < (12 * (LAST_YEARS + 1))) {
@@ -165,7 +171,8 @@ const MONTHLY = (function() {
     options.push({
       value: startDate.toISOString(),
       end: endDate.toISOString(),
-      displayValue: (startDate.getMonth() + 1) + "-" + startDate.getFullYear()
+      displayValue: (startDate.getMonth() + 1) + "-" + startDate.getFullYear(),
+      dateView: (startDate.getMonth() + 1) + "-" + startDate.getFullYear()
     });
   }
 
@@ -200,7 +207,14 @@ const CHECKLIST_OPTIONS = [
   templateUrl: './vsr.checklist.component.html',
   styleUrls: ['./checklist.component.css']
 })
-export class VSRChecklistComponent implements OnInit, AfterViewInit {
+export class VSRChecklistComponent implements OnInit, AfterViewInit, OnDestroy {
+
+  range = new FormGroup({
+    start: new FormControl(),
+    end: new FormControl()
+  });
+
+  navigationSubscription;
 
   currentUserRole = 'all';
   currentUserState = 'all';
@@ -245,11 +259,47 @@ export class VSRChecklistComponent implements OnInit, AfterViewInit {
   pageSizeOptions = [10, 20, 40, 100];
 
   // constructor(private checklistService: ChecklistService, private ui: UiService) { }
-  constructor(private checklistService: ChecklistService, private authService: AuthenticationService) { }
+  constructor(private checklistService: ChecklistService, private authService: AuthenticationService, private router: Router) {
+    this.navigationSubscription = this.router.events.subscribe((e: any) => {
+      // If it is a NavigationEnd event re-initalise the component
+      if (e instanceof NavigationEnd) {
+        this.initialize();
+      }
+    });
+  }
+
+  initialize() {
+    var currentUser = this.authService.currentUserValue;
+    console.log(currentUser);
+    if (currentUser) {
+      if (currentUser.role == 'admin') {
+        this.currentUserRole = 'all';
+        this.currentUserState = 'all';
+      }
+      else if (currentUser.role == 'stateAdmin') {
+        this.currentUserRole = 'state';
+        this.currentUserState = currentUser.state;
+        this.selectedState = this.currentUserState;
+      }
+      else if (currentUser.role == 'entityAdmin') {
+        this.currentUserRole = 'entity';
+        this.currentUserState = currentUser.state;
+        // TODO: find a way to limit selection to states of entity (see master excel sheet for list of states per entity)
+      }
+    }
+    this.fetchData();
+    // this.updateDataSource(this.currentElementData);
+  }
+
+  ngOnDestroy() {
+    if (this.navigationSubscription) {
+      this.navigationSubscription.unsubscribe();
+    }
+  }
 
   ngAfterViewInit(): void {
     // console.log("life: AfterViewInit");
-    this.fetchData();
+    // this.fetchData();
   }
 
   ngOnInit(): void {
@@ -272,7 +322,7 @@ export class VSRChecklistComponent implements OnInit, AfterViewInit {
         // TODO: find a way to limit selection to states of entity (see master excel sheet for list of states per entity)
       }
     }
-    this.updateDataSource(this.currentElementData);
+    // this.updateDataSource(this.currentElementData);
   }
 
   // filter state
@@ -327,6 +377,7 @@ export class VSRChecklistComponent implements OnInit, AfterViewInit {
   }
 
   private updateDataSource(dataList) {
+    console.log(dataList);
     this.currentElementData = dataList;
     this.expectedCheckCount = dataList[0].expectedCheckCount;
     var tempArray = [];
@@ -356,6 +407,7 @@ export class VSRChecklistComponent implements OnInit, AfterViewInit {
 
   // query data
   fetchData() {
+    console.log("!!!!!")
     // handle what type of checklist is displayed and must update date range default value
     this.isLoading = true;
     var params = [];
@@ -420,6 +472,26 @@ export class VSRChecklistComponent implements OnInit, AfterViewInit {
 
         this.updateDataSource(result);
       });
+  }
+
+  getDateView() {
+    console.log(this.selectedOption);
+    if (this.selectedChecklist.value == 'daily') {
+      return this.selectedOptionDaily.dateView;
+    }
+    else {
+      if (this.selectedOption.length > 1) {
+        var items = [];
+        for (var option of this.selectedOption) {
+          items.push(option.dateView);
+        }
+
+        // if (item)
+        return items[0] + ` (+${items.length - 1} ${items.length === 2 ? 'other' : 'others'})`;
+      }
+      else
+        return this.selectedOption[0].dateView;
+    }
   }
 
   resetPeriodFilter() {

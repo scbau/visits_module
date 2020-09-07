@@ -12,6 +12,7 @@ import { AuthenticationService } from '../../services/auth/auth.service';
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent implements OnInit {
+  hide = true;
   loginForm: FormGroup;
   loading = false;
   submitted = false;
@@ -43,6 +44,13 @@ export class LoginComponent implements OnInit {
   // convenience getter for easy access to form fields
   get f() { return this.loginForm.controls; }
 
+  keyDownFunction(event) {
+    if (event.keyCode === 13) {
+      // alert('you just pressed the enter key');
+      // rest of your code
+    }
+  }
+
   onSubmit() {
     this.submitted = true;
 
@@ -59,7 +67,8 @@ export class LoginComponent implements OnInit {
           this.router.navigate([this.returnUrl]);
         },
         error => {
-          this.error = error;
+          console.log(error);
+          this.error = "Incorrect username or password";
           this.loading = false;
         });
   }

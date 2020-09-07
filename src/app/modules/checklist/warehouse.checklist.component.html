@@ -2,7 +2,7 @@
   <div fxLayout="column" fxLayoutAlign="start stretch" style="padding: 10px; width: 35%;">
       <h3><b>Filters</b></h3>
     <!-- <div> -->
-      <mat-form-field>
+      <mat-form-field *ngIf="currentUserRole != 'state'">
         <mat-label>State</mat-label>
         <mat-select (selectionChange)="filterState($event)" [disabled]="isLoading || currentUserRole == 'state'" [(ngModel)]="selectedState">
           <mat-option value="" selected>
@@ -60,6 +60,21 @@
         <!-- <mat-hint>Errors appear instantly!</mat-hint> -->
         <mat-error *ngIf="options.hasError('required')">Must select a date range to display.</mat-error>
       </mat-form-field>
+
+      <!-- <mat-form-field *ngIf="selectedChecklist.value == 'daily' && selectedOptionDaily.value == 'custom'">
+        <mat-label>Enter a date range</mat-label>
+        <mat-date-range-input [formGroup]="range" [rangePicker]="picker">
+          <input matStartDate formControlName="start" placeholder="Start date">
+          <input matEndDate formControlName="end" placeholder="End date">
+        </mat-date-range-input>
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-date-range-picker #picker></mat-date-range-picker>
+
+        <mat-error *ngIf="range.controls.start.hasError('matStartDateInvalid')">Invalid start date</mat-error>
+        <mat-error *ngIf="range.controls.end.hasError('matEndDateInvalid')">Invalid end date</mat-error>
+      </mat-form-field>
+
+      <p>Selected range: {{range.value | json}}</p> -->
 
       <mat-form-field *ngIf="selectedChecklist.value != 'daily'">
         <mat-label>Date Range</mat-label>
@@ -127,7 +142,7 @@
   </div>
 
   <div style="width: 100%; padding: 10px;">
-    <h2>{{ selectedChecklist.displayValue }} Warehouse Depot Checklist Compliance ({{selectedOptionDaily.dateView}})</h2>
+    <h2>{{ selectedChecklist.displayValue }} Warehouse Depot Checklist Compliance ({{ getDateView() }})</h2>
     <p *ngIf="expectedCheckCount">(Expected times checked: {{ expectedCheckCount }})</p>
     <mat-progress-bar mode="indeterminate" color="accent" *ngIf="isLoading"></mat-progress-bar>
     <table style="width: 100%;" mat-table matSort matSortActive="compliance" matSortDirection="desc" [dataSource]="dataSource" class="mat-elevation-z8">
@@ -170,6 +185,11 @@
       <ng-container matColumnDef="timesCritical">
         <th style="width: 10%!important;" mat-header-cell *matHeaderCellDef mat-sort-header> Times with Critical </th>
         <td style="width: 10%!important; padding-left: 20px;" mat-cell *matCellDef="let element"> {{element.timesCritical}} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="items">
+        <th style="width: 10%!important;" mat-header-cell *matHeaderCellDef mat-sort-header> items </th>
+        <td style="width: 10%!important; padding-left: 20px;" mat-cell *matCellDef="let element"> <a href="" *ngIf="element.items.length>0">link here</a> </td>
       </ng-container>
 
       <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>

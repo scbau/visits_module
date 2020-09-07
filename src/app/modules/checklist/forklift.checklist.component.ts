@@ -1,5 +1,7 @@
-import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, ViewChild, AfterViewInit, OnDestroy } from '@angular/core';
 import * as moment from 'moment';
+
+import { Router, NavigationEnd } from '@angular/router';
 
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
@@ -7,6 +9,7 @@ import { MatTableDataSource } from '@angular/material/table';
 import { ErrorStateMatcher } from '@angular/material/core';
 
 // import { VisitService } from '../../services/visit/visit.service';
+import { AuthenticationService } from '../../services/auth/auth.service';
 import { ChecklistService } from '../../services/checklist/checklist.service';
 
 import { FormControl, FormGroupDirective, NgForm, Validators } from '@angular/forms';
@@ -61,7 +64,10 @@ const DAILY = (function() {
   var first = startDate.getDate() - startDate.getDay() + 1
   var last = first + 4;
   var monday = new Date(startDate.setDate(first));
-  var friday = new Date(startDate.setDate(last));
+
+  var friday = new Date(startDate.valueOf());
+  friday.setDate(friday.getDate() + 4);
+  // var friday = new Date(startDate.setDate(first + 4));
 
   options.push({
     value: monday.toISOString(),
@@ -123,7 +129,11 @@ const DAILY = (function() {
   templateUrl: './forklift.checklist.component.html',
   styleUrls: ['./checklist.component.css']
 })
-export class ForkliftChecklistComponent implements OnInit {
+export class ForkliftChecklistComponent implements OnInit, AfterViewInit, OnDestroy {
+  navigationSubscription;
+
+  currentUserRole = 'all';
+  currentUserState = 'all';
 
   expectedCheckCount = 0;
 
@@ -158,18 +168,70 @@ export class ForkliftChecklistComponent implements OnInit {
   currentElementData = [];
   // currentElementData = [];
 
-  states = ["ACT", "NSW", "NZ", "NT", "QLD", "SA", "TAS", "VIC", "WA"];
+  states = ["NSW", "NZ", "QLD", "SA", "VIC", "WA", "TEST"];
   pageSizeOptions = [10, 20, 40, 100];
 
   // constructor(private visitService: VisitService) { }
-  constructor(private checklistService: ChecklistService) { }
+  constructor(private checklistService: ChecklistService, private authService: AuthenticationService, private router: Router) {
+    this.navigationSubscription = this.router.events.subscribe((e: any) => {
+      // If it is a NavigationEnd event re-initalise the component
+      if (e instanceof NavigationEnd) {
+        this.initialize();
+      }
+    });
+  }
 
-  ngAfterViewInit(): void {
+  initialize() {
+    var currentUser = this.authService.currentUserValue;
+    console.log(currentUser);
+    if (currentUser) {
+      if (currentUser.role == 'admin') {
+        this.currentUserRole = 'all';
+        this.currentUserState = 'all';
+      }
+      else if (currentUser.role == 'stateAdmin') {
+        this.currentUserRole = 'state';
+        this.currentUserState = currentUser.state;
+        this.selectedState = this.currentUserState;
+      }
+      else if (currentUser.role == 'entityAdmin') {
+        this.currentUserRole = 'entity';
+        this.currentUserState = currentUser.state;
+        // TODO: find a way to limit selection to states of entity (see master excel sheet for list of states per entity)
+      }
+    }
     this.fetchData();
   }
 
+  ngOnDestroy() {
+    if (this.navigationSubscription) {
+      this.navigationSubscription.unsubscribe();
+    }
+  }
+
+  ngAfterViewInit(): void {
+    // this.fetchData();
+  }
+
   ngOnInit(): void {
-    this.updateDataSource(this.currentElementData);
+    var currentUser = this.authService.currentUserValue;
+    if (currentUser) {
+      if (currentUser.role == 'admin') {
+        this.currentUserRole = 'all';
+        this.currentUserState = 'all';
+      }
+      else if (currentUser.role == 'stateAdmin') {
+        this.currentUserRole = 'state';
+        this.currentUserState = currentUser.state;
+        this.selectedState = this.currentUserState;
+      }
+      else if (currentUser.role == 'entityAdmin') {
+        this.currentUserRole = 'entity';
+        this.currentUserState = currentUser.state;
+        // TODO: find a way to limit selection to states of entity (see master excel sheet for list of states per entity)
+      }
+    }
+    // this.updateDataSource(this.currentElementData);
   }
 
   filterOptionList(data) {
@@ -336,6 +398,7 @@ export class ForkliftChecklistComponent implements OnInit {
   }
 
   fetchData() {
+    console.log("!!!!!");
     // handle what type of checklist is displayed and must update date range default value
     this.isLoading = true;
     var params = [];
